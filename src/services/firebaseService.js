@@ -1,8 +1,8 @@
 import { db, storage, auth } from "../config/firebaseConfig";
 
-const { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, addDoc, updateDoc, query, where, getDocs } = require("firebase/firestore");
-const { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } = require("firebase/storage");
-const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, deleteUser } = require("firebase/auth");
+const { doc, getDoc, setDoc, deleteDoc, collection, addDoc, updateDoc, query, where, getDocs } = require("firebase/firestore");
+const { ref, uploadBytes, getDownloadURL, deleteObject } = require("firebase/storage");
+const { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, deleteUser } = require("firebase/auth");
 const { tryCatch, throwError } = require("../middlewares/errorMiddleware");
 const { app } = require("../config/firebaseConfig"); // Import Firebase app instance
 
