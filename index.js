@@ -4,6 +4,8 @@
 const express = require('express');
 const app = express();
 
+require('dotenv').config();
+
 // Misc. imports and mounts
 const morgan = require('morgan')
 const { errorHandler } = require('./src/middlewares/errorMiddleware');
@@ -37,3 +39,4 @@ app.listen(PORT, () => {
 });
 
 /*===================================================================================*/
+
