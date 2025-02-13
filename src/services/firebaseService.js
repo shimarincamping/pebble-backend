@@ -4,7 +4,6 @@ const { doc, getDoc, setDoc, deleteDoc, collection, addDoc, updateDoc, query, wh
 const { ref, uploadBytes, getDownloadURL, deleteObject } = require("firebase/storage");
 const { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, deleteUser } = require("firebase/auth");
 const { tryCatch, throwError } = require("../middlewares/errorMiddleware");
-const { app } = require("../config/firebaseConfig"); // Import Firebase app instance
 
 
 /** ==========================
