@@ -1,7 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+const { initializeApp } = require("firebase/app");
+const { getFirestore } = require( "firebase/firestore");
+const { getStorage } = require("firebase/storage");
+const { getAuth } = require("firebase/auth");
 
 // Firebase Config (uses environment variables)
 const firebaseConfig = {
@@ -22,4 +22,6 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 // Export for use in other files
-export { app, db, storage, auth };
+module.exports = { 
+  db, storage, auth 
+};

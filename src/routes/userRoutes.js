@@ -8,17 +8,16 @@ const userController = require('../controllers/userController');
 
 // Pre-processes all routes that contain an ID parameter
 userRouter.param("id", (req, res, next, id) => {        
-    req.userID = Number(id);
-    req.userName = "John Doe";
-
+    req.userID = id;
     next();
-})                                                          // This callback can also be extracted into the controller
+})                                                        
 
-
-// Try accessing http://localhost:4001/users or http://localhost:4001/users/ANY_VALUE and understand the stack trace!
-userRouter.get("/", userController.getUsersBasePath, userController.testFuncFail);
-userRouter.get("/:id", userController.getNameById);
-
+// Get a specific user's information
+userRouter.get("/", userController.getAllUserData);
+userRouter.get("/:id", userController.assertUserExists, userController.getUserData);
+    // For POST, I still haven't figured out how to auto-assign IDs (will need to be done later!)
+userRouter.post("/:id", userController.assertUserNotExists, userController.registerNewUser); 
+userRouter.delete("/:id", userController.assertUserExists, userController.deleteUser);
 
 
 module.exports = userRouter;
