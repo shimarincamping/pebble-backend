@@ -20,4 +20,11 @@ userRouter.post("/", userController.assertUserEmailNotRegistered, userController
 userRouter.delete("/:id", userController.deleteUser);
 
 
+// Create middleware for NOTIFICATION GENERATION and GOAL PROGRESS TRACKING
+
+
+// Sidebar and Navigation Panel
+userRouter.get("/:id/notifications", userController.getUserNotifications);
+
+
 module.exports = userRouter;
