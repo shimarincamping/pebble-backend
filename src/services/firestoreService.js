@@ -1,14 +1,20 @@
 const { db } = require("../config/firebaseConfig");
-const { doc, collection, getDoc, getDocs, query, addDoc, setDoc, deleteDoc } = require("firebase/firestore");
+const { doc, collection, getDoc, getDocs, query, addDoc, setDoc, updateDoc, deleteDoc } = require("firebase/firestore");
 const { throwError } = require('../middlewares/errorMiddleware');
 
 // Create a new document in a collection with auto-generated ID   (CREATE with non-sequential auto-ID)
 exports.firebaseCreate = async (path, data, next) => {
     try {
-        return await addDoc(
+        const newDocRef = await addDoc(
             collection(db, ...path.split("/")),
             data
         );
+
+        await updateDoc(newDocRef, {
+            docId : newDocRef.id
+        });
+
+        return newDocRef;
     } catch (err) {
         return throwError(500, err, next);
     }

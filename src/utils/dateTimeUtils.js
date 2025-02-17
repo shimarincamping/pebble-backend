@@ -7,7 +7,10 @@ const timeConversionMapping = [
     { unitName: 'second', unitInSeconds: 1 }
 ]
 
-exports.getTimeDurationString = (seconds) => {
+exports.getTimeDurationString = (currentTime, referenceTime) => {
+
+    const seconds = Math.ceil((currentTime - referenceTime) / 1000);
+
     for (const unit of timeConversionMapping) {
         const { unitName, unitInSeconds } = unit;
         const value = Math.floor(seconds / unitInSeconds);
