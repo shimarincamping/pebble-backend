@@ -5,8 +5,7 @@ const express = require('express');
 const app = express();
 
 // Misc. imports and mounts
-const dotenv = require('dotenv').config();
-const morgan = require('morgan')
+const morgan = require('morgan');
 const { errorHandler } = require('./src/middlewares/errorMiddleware');
 
 app.use(express.json());
