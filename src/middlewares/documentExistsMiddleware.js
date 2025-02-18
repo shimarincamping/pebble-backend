@@ -26,7 +26,7 @@ exports.assertNotExists = (path, next) => {
 }
 
 exports.assertUniquePropertyNotExists = (path, field, value, next) => {
-    firestoreService.firebaseReadIf(path, [where(field, "==", value)], next)
+    firestoreService.firebaseReadQuery(path, [where(field, "==", value)], next)
         .then((data) => {
             if (data.length === 0) {
                 return next();

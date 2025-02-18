@@ -1,11 +1,15 @@
 const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
-const { where } = require("firebase/firestore");
+const { where, select } = require("firebase/firestore");
 const { objectReducer } = require('../utils/objectReducerUtils');
 const { getTimeDurationString } = require('../utils/dateTimeUtils');
 
-// User existance checking
+
+// ---------------------------------- //
+// User existence checking
+// ---------------------------------- //
+
 exports.assertUserExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`users/${req.userID}`, res, next);
 }
@@ -15,7 +19,12 @@ exports.assertUserEmailNotRegistered = (req, res, next) => {
 }
 
 
-// Basic User operations
+
+
+// ---------------------------------- //
+// Basic CRUD
+// ---------------------------------- //
+
 exports.getAllUserData = (req, res, next) => {
     firestoreService.firebaseReadAll(`users`, next)
         .then((usersData) => {
@@ -25,7 +34,7 @@ exports.getAllUserData = (req, res, next) => {
 
 exports.getUserData = (req, res, next) => {         
     return res.status(200).send(res.locals.currentData);            
-} // Data is set by assertExists and saved into res.locals.currentData (avoids recalling Firebase)
+}   // Data is already set by assertExists and saved into res.locals.currentData (avoids recalling Firebase)
 
 
 exports.deleteUser = (req, res, next) => {
@@ -44,42 +53,39 @@ exports.registerNewUser = (req, res, next) => {         // TODO: Integrate this 
 }
 
 
+
+
+// ---------------------------------- //
 // Sidebar and Navigation Panel
+// ---------------------------------- //
+
 exports.getUserNotifications = (req, res, next) => {
-    firestoreService.firebaseReadAll(`users/${req.userID}/notifications`, next)
-        .then((resp) => {
 
-            // If there are no notifications, return early
-            if (resp.length === 0) {
-                res.status(200).send([]);
-                return;
-            }
+    const notifications = res.locals.currentData.notifications;
 
-            // Fetch user data based on notificationTriggeredBy
-            const usersData = firestoreService.firebaseReadIf(
-                `users`,
-                [where('docId', 'in', resp.map(n => n.notificationTriggeredBy))],
-                next
+    if (!(notifications?.length)) {         
+        res.status(200).send([]);
+        return;     // If there are no notifications, return early
+    }
+
+    // Fetch user data based on notificationTriggeredBy
+    firestoreService.firebaseReadQuery(
+        `users`,
+        [where('docId', 'in', notifications.map(n => n.notificationTriggeredBy))],
+        next
+    ).then((usersData) => {
+        if (usersData) {
+            const currentTime = new Date();
+            const users = objectReducer(usersData);
+            
+            return res.status(200).send(
+                notifications.map(n => ({
+                    notificationTriggeredBy : users[n.notificationTriggeredBy].fullName,
+                    notificationImage : users[n.notificationTriggeredBy].profilePicture,
+                    notificationText : n.notificationText,
+                    notificationDateTime : getTimeDurationString(currentTime, new Date(n.notificationDateTime))
+                }))
             );
-
-            // Return both promises
-            return Promise.all([resp, usersData]);
-
-        }).then((resp) => {
-            if (resp) {
-                const [notifications, usersData] = resp;
-
-                const currentTime = new Date();
-                const users = objectReducer(usersData);
-                
-                return res.status(200).send(
-                    notifications.map(n => ({
-                        notificationTriggeredBy : users[n.notificationTriggeredBy].fullName,
-                        notificationImage : users[n.notificationTriggeredBy].profilePicture,
-                        notificationText : n.notificationText,
-                        notificationDateTime : getTimeDurationString(currentTime, new Date(n.notificationDateTime))
-                    }))
-                );
-            }
-        })
+        }
+    });
 }

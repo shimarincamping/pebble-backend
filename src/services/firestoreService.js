@@ -53,7 +53,7 @@ exports.firebaseReadAll = async (path, next) => {
         const resp = await getDocs(
             collection(db, ...path.split("/"))
         );
-        return resp.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return resp.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
     } catch (err) {
         return throwError(500, err, next);
     }
@@ -61,13 +61,13 @@ exports.firebaseReadAll = async (path, next) => {
 
 // Return only documents matching query  (READ if meeting conditions)
     // Caller needs to pass queryParams as array (e.g.: [where("price", "<=", 30000), ...])
-exports.firebaseReadIf = async (path, queryParams, next) => {
+exports.firebaseReadQuery = async (path, queryParams, next) => {
     try {
         const resp = await getDocs(query(
             collection(db, ...path.split("/")),
             ...queryParams
         ));
-        return resp.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        return resp.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
     } catch (err) {
         return throwError(500, err, next);
     }
