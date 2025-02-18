@@ -13,11 +13,10 @@ userRouter.param("id", (req, res, next, id) => {
 // ID must exist to perform operations that involve an ID parameter
 userRouter.use("/:id", userController.assertUserExists);
 
-// Get a specific user's information
-userRouter.get("/", userController.getAllUserData);
-userRouter.get("/:id", userController.getUserData);
-userRouter.post("/", userController.assertUserEmailNotRegistered, userController.registerNewUser);
-userRouter.delete("/:id", userController.deleteUser);
+userRouter.get("/", userController.getAllUserData);     // Get all users
+userRouter.get("/:id", userController.getUserData);     // Get a specific user
+userRouter.post("/", userController.assertUserEmailNotRegistered, userController.registerNewUser);      // Create a new user
+userRouter.delete("/:id", userController.deleteUser);       // Delete a user
 
 
 // Create middleware for NOTIFICATION GENERATION and GOAL PROGRESS TRACKING

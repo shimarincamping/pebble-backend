@@ -1,7 +1,7 @@
 const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
-const { where, select } = require("firebase/firestore");
+const { where } = require("firebase/firestore");
 const { objectReducer } = require('../utils/objectReducerUtils');
 const { getTimeDurationString } = require('../utils/dateTimeUtils');
 

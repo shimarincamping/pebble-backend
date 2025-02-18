@@ -16,11 +16,13 @@ app.use(morgan("dev"));
 
 // Import routers
 const userRoutes = require('./src/routes/userRoutes');
+const codingChallengeRoutes = require('./src/routes/codingChallengeRoutes');
 
 
 
 // Mount routers
 app.use('/users', userRoutes);
+app.use('/coding-challenges', codingChallengeRoutes);
 
 
 
