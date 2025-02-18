@@ -1,7 +1,7 @@
 const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
-const { objectReducer } = require('../utils/objectReducerUtils');
+const { documentObjectArrayReduce } = require('../utils/dataManipulationUtils');
 const { sortChallengesByDifficulty } = require('../utils/codingChallengeUtils');
 
 
@@ -16,7 +16,7 @@ exports.getAllCodingChallengeData = (req, res, next) => {
     firestoreService.firebaseReadAll(`codingChallenges`, next)
         .then((codingChallengesData) => {
             return res.status(200).send(
-                objectReducer(sortChallengesByDifficulty(
+                documentObjectArrayReduce(sortChallengesByDifficulty(
                     codingChallengesData.map(c => {
                         c.lastAnsweredQuestion = c.lastAnsweredQuestion[currentUserID] || -1;
                         c.isQuizCompleted = (c.lastAnsweredQuestion >= c.quizQuestions.length);

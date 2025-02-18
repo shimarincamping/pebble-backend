@@ -2,7 +2,7 @@ const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
 const { where } = require("firebase/firestore");
-const { objectReducer } = require('../utils/objectReducerUtils');
+const { documentObjectArrayReduce } = require('../utils/dataManipulationUtils');
 const { getTimeDurationString } = require('../utils/dateTimeUtils');
 
 
@@ -76,7 +76,7 @@ exports.getUserNotifications = (req, res, next) => {
     ).then((usersData) => {
         if (usersData) {
             const currentTime = new Date();
-            const users = objectReducer(usersData);
+            const users = documentObjectArrayReduce(usersData);
             
             return res.status(200).send(
                 notifications.map(n => ({
