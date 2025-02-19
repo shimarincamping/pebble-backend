@@ -1,6 +1,6 @@
 const firestoreService = require('../services/firestoreService');
 
-const { where } = require("firebase/firestore");
+const { where, FieldValue } = require("firebase/firestore");
 const { groupObjectsByFieldValues, sortObjectsByNumericFieldValues, sanitiseNewLineSequences } = require('../utils/dataManipulationUtils');
 const { isTodayANewDay } = require('../utils/dateTimeUtils');
 
@@ -37,7 +37,7 @@ exports.getGoalData = (req, res, next) => {
 
     firestoreService.firebaseReadAll(`goals`, next)
         .then((goalsData) => {
-            return res.status(200).send(
+            res.status(200).send(
                 groupObjectsByFieldValues(sortObjectsByNumericFieldValues(goalsData.map(g => {
                     g.isGoalCompleted = (g.userProgress[currentUserID] >= g.progressMax);
                     const { userProgress, progressMax, ...goalDataWithoutProgressInfo } = g;
@@ -48,17 +48,15 @@ exports.getGoalData = (req, res, next) => {
 }
 
 
-// Add function(s) to manipulate Goals records here
-    // The actions that can possibly trigger goals should call an instance of this function as part of its process.
+// Needs to be called in actions that coincide with goal actions
+exports.updateGoalProgress = async (goalID, userID, next, increment=1) => {
 
+    const { userProgress } = await firestoreService.firebaseRead(`goals/${goalID}`, next);
+    const currentUserProgress = userProgress?.[userID];
 
-/*
-
-exports.updateGoalProgress = (params) => {      // Needs goal identifier, user identifier, number to increment = 1
-    return (req, res, next) => {
-
-
-    }    
+    firestoreService.firebaseWrite(
+        `goals/${goalID}`,
+        { userProgress : { [userID] : currentUserProgress + increment || increment } }, 
+        next
+    );
 }
-
-*/
