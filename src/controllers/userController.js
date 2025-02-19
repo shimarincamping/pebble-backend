@@ -89,3 +89,45 @@ exports.getUserNotifications = (req, res, next) => {
         }
     });
 }
+
+
+// ---------------------------------- //
+// Misc.
+// ---------------------------------- //
+const POINTS_PER_TICKET = 100;
+
+
+exports.addPointsTicketsToUser = async (userID, numberOfPoints, next) => {
+    
+    // Read points and tickets
+    const { pointCount, ticketCount } = await firestoreService.firebaseRead(`users/${userID}`);
+
+    const newPointCount = pointCount + numberOfPoints;
+    const newTicketCount = ticketCount + ( Math.floor(newPointCount / POINTS_PER_TICKET) - Math.floor(pointCount / POINTS_PER_TICKET) );
+
+    // Add points and tickets
+    firestoreService.firebaseWrite(
+        `users/${userID}`,
+        { pointCount : newPointCount, ticketCount : newTicketCount },
+        next
+    );
+}
+
+
+exports.generateNotification = async (userID, notificationTriggeredBy, notificationText, next) => {
+
+    const newNotification = {
+        notificationDateTime : new Date().toISOString(),
+        notificationTriggeredBy : notificationTriggeredBy,
+        notificationText : notificationText
+    }
+
+    const { notifications } = await firestoreService.firebaseRead(`users/${userID}`, next);
+
+    firestoreService.firebaseWrite(
+        `users/${userID}`,
+        { notifications : [newNotification, ...notifications] },
+        next
+    )
+
+}
