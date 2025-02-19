@@ -9,7 +9,7 @@ exports.documentObjectArrayReduce = (arr) => {
 
 // Reduces a given array of objects
     // to a new object with a specific field's unique values as the keys
-exports.groupObjectByFieldValues = (arr, field) => {
+exports.groupObjectsByFieldValues = (arr, field) => {
     return arr.reduce((acc, { docId, ...rest }) => {
         const key = rest[field];
         acc[key] = acc[key] || [];

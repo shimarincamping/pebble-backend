@@ -24,3 +24,10 @@ exports.getTimeDurationString = (currentTime, referenceTime) => {
 
     return "Now";
 }
+
+exports.isTodayANewDay = (currentDate, referenceDate) => {
+    currentDate.setHours(0, 0, 0, 0);
+    referenceDate.setHours(0, 0, 0, 0);
+
+    return currentDate > referenceDate;
+}
