@@ -27,7 +27,7 @@ exports.formatPostData = (postData, authorUserData) => {
                             : ("External PEBBLE User")),
         time : getTimeDurationString(new Date(), new Date(postData.postCreatedAt)),
         // TODO: Add LinkedIn URL here
-        postPicture : postData.postPicture,
+        postPicture : postData?.postPicture || null,
         title : postData.title,
         date : (new Date(postData.postCreatedAt).toLocaleString("default", { year: "numeric", month: "long", day: "numeric" })).toUpperCase(),
         postDec : postData.postDesc,

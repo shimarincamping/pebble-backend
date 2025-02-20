@@ -31,3 +31,12 @@ exports.isTodayANewDay = (currentDate, referenceDate) => {
 
     return currentDate > referenceDate;
 }
+
+exports.hasCooldownElapsed = (currentTime, referenceTime, timeDuration) => {
+    let seconds = 0;
+    for (const [k, v] of Object.entries(timeDuration)) {
+        seconds += (timeConversionMapping.find(u => u.unitName === k)?.unitInSeconds * v) || 0;
+    }
+
+    return ((currentTime - referenceTime) / 1000) >= seconds;
+}

@@ -23,6 +23,7 @@ userRouter.delete("/:id", userController.deleteUser);       // Delete a user
 userRouter.get("/:id/notifications", userController.getUserNotifications);
 userRouter.get("/:id/profile-information/basic", userController.getUserInformation(false));
 userRouter.get("/:id/network", userController.getUserNetworkInformation);
+userRouter.get("/:id/stats", userController.getUserStatsInformation);
 userRouter.get("/:id/currency", userController.getUserCurrencyInformation);
 
 

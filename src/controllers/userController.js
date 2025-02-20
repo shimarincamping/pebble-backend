@@ -7,6 +7,9 @@ const { getTimeDurationString } = require('../utils/dateTimeUtils');
 const { formatPostData } = require('./postController');
 
 
+exports.POINTS_PER_TICKET = 100;
+
+
 // ---------------------------------- //
 // User existence checking
 // ---------------------------------- //
@@ -124,15 +127,16 @@ exports.getUserNetworkInformation = async (req, res, next) => {
     })
 }
 
-/*
-exports.getUserStatsInformation = (req, res, next) => {
+exports.getUserStatsInformation = async (req, res, next) => {
     return res.status(200).send({
-        // Add leaderboard rank here
-        currentPoints : res.locals.currentData?.pointCount || 0,
-        availableTickets : res.locals.currentData?.ticketCount || 0
+        leaderboardRank : await firestoreService.firebaseRead(`leaderboard/points`, next)
+                            .then(({rankings}) => {
+                                return rankings.findIndex(u => u.userID === req.userID) + 1
+                            }),
+        totalPoints : res.locals.currentData?.pointCount || 0,
+        tickets : res.locals.currentData?.ticketCount || 0
     })
 }
-*/
 
 exports.getUserCurrencyInformation = (req, res, next) => {
     return res.status(200).send({
@@ -243,14 +247,12 @@ exports.getGeneratedCV = async (req, res, next) => {
 // ---------------------------------- //
 
 exports.addPointsTicketsToUser = async (userID, numberOfPoints, next) => {
-
-    const POINTS_PER_TICKET = 100;
     
     // Read points and tickets
     const { pointCount, ticketCount } = await firestoreService.firebaseRead(`users/${userID}`);
 
     const newPointCount = pointCount + numberOfPoints;
-    const newTicketCount = ticketCount + ( Math.floor(newPointCount / POINTS_PER_TICKET) - Math.floor(pointCount / POINTS_PER_TICKET) );
+    const newTicketCount = ticketCount + ( Math.floor(newPointCount / this.POINTS_PER_TICKET) - Math.floor(pointCount / this.POINTS_PER_TICKET) );
 
     // Add points and tickets
     firestoreService.firebaseWrite(
