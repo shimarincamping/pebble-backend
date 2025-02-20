@@ -19,6 +19,9 @@ postRouter.use("/:id", postController.assertPostExists);
 
 // Other post routes
 postRouter.get("/:id", postController.getSinglePostData);
+postRouter.put("/:id/likes", postController.togglePostLike);
+postRouter.get("/:id/comments", postController.getPostComments);
+postRouter.post("/:id/comments", postController.addNewComment);
 
 
 

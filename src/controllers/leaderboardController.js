@@ -1,9 +1,8 @@
 const firestoreService = require('../services/firestoreService');
 
 const { orderBy } = require("firebase/firestore");
-const {  } = require('../utils/dataManipulationUtils');
 const { hasCooldownElapsed } = require('../utils/dateTimeUtils');
-const { POINTS_PER_TICKET } = require('./userController');
+const { POINTS_PER_TICKET } = require('../middlewares/goalsRewardsMiddleware');
 
 
 exports.checkLastRefresh = async (req, res, next) => {
@@ -49,5 +48,5 @@ const refreshLeaderboard = async (next) => {
 
 exports.getLeaderboardData = async (req, res, next) => {
     const { rankings } = await firestoreService.firebaseRead(`leaderboard/points`, next);
-    res.status(200).send(rankings);
+    res.status(200).send(rankings.slice(0, 25));    // Only return the top 25 users
 }

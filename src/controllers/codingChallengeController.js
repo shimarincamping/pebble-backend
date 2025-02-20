@@ -10,7 +10,7 @@ exports.assertCodingChallengeExists = (req, res, next) => {
 
 exports.getAllCodingChallengeData = (req, res, next) => {
 
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to 3)
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
     firestoreService.firebaseReadAll(`codingChallenges`, next)
         .then((codingChallengesData) => {
@@ -35,7 +35,7 @@ exports.getCodingChallengeData = (req, res, next) => {
 
 exports.updateUserChallengeProgress = (req, res, next) => {
 
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to 3)
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
     if (req.body?.newProgressValue) {
         firestoreService.firebaseWrite(

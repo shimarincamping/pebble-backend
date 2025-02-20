@@ -3,7 +3,6 @@ const firestoreService = require('../services/firestoreService');
 const { where } = require("firebase/firestore");
 const { groupObjectsByFieldValues, sortObjectsByNumericFieldValues, sanitiseNewLineSequences } = require('../utils/dataManipulationUtils');
 const { isTodayANewDay } = require('../utils/dateTimeUtils');
-const { addPointsTicketsToUser, generateNotification } = require('./userController');
 
 
 // Reads global/goals/lastRefresh and compares dates
@@ -34,7 +33,7 @@ const refreshDailyGoals = async (next) => {
 
 exports.getGoalData = (req, res, next) => {
 
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to 3)
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
     firestoreService.firebaseReadAll(`goals`, next)
         .then((goalsData) => {
@@ -46,22 +45,4 @@ exports.getGoalData = (req, res, next) => {
                 }), "goalPoints"), "goalType")
             );
         });  
-}
-
-
-// Needs to be called in actions that coincide with goal actions
-exports.updateGoalProgress = async (goalID, userID, next, increment=1) => {
-
-    const { progressMax, userProgress, goalPoints } = await firestoreService.firebaseRead(`goals/${goalID}`, next);
-    const newUserProgress = (userProgress?.[userID] + increment) || increment;
-
-    firestoreService.firebaseWrite(
-        `goals/${goalID}`,
-        { userProgress : { [userID] : newUserProgress } }, 
-        next
-    );
-
-    if (newUserProgress === progressMax) { // Award points if new progress reaches the target (max)
-        addPointsTicketsToUser(userID, goalPoints, next);
-    }
 }

@@ -13,6 +13,7 @@ codingChallengeRouter.param('id', (req, res, next, id) => {
 codingChallengeRouter.use('/:id', codingChallengeController.assertCodingChallengeExists);
 
 
+// Route definitions
 codingChallengeRouter.get('/', codingChallengeController.getAllCodingChallengeData);
 codingChallengeRouter.get('/:id', codingChallengeController.getCodingChallengeData);
 codingChallengeRouter.post('/:id/user-progress', codingChallengeController.updateUserChallengeProgress);
