@@ -27,7 +27,7 @@ exports.firebaseWrite = async (path, data, next, overwriteData=false) => {
         return await setDoc(
             doc(db, ...path.split("/")),
             data,
-            { merge: !overwriteData }
+            { merge: !overwriteData, ignoreUndefinedProperties: true }
         );
     } catch (err) {
         return throwError(500, err, next);

@@ -16,6 +16,7 @@ app.use(morgan("dev"));
 
 // Import routers
 const userRoutes = require('./src/routes/userRoutes');
+const postRoutes = require('./src/routes/postRoutes');
 const codingChallengeRoutes = require('./src/routes/codingChallengeRoutes');
 const goalRoutes = require('./src/routes/goalRoutes');
 
@@ -23,6 +24,7 @@ const goalRoutes = require('./src/routes/goalRoutes');
 
 // Mount routers
 app.use('/users', userRoutes);
+app.use('/posts', postRoutes);
 app.use('/coding-challenges', codingChallengeRoutes);
 app.use('/goals', goalRoutes);
 

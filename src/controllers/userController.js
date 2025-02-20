@@ -1,9 +1,10 @@
 const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
-const { where } = require("firebase/firestore");
-const { documentObjectArrayReduce } = require('../utils/dataManipulationUtils');
+const { where, orderBy, limit } = require("firebase/firestore");
+const { documentObjectArrayReduce, shuffleArray } = require('../utils/dataManipulationUtils');
 const { getTimeDurationString } = require('../utils/dateTimeUtils');
+const { formatPostData } = require('./postController');
 
 
 // ---------------------------------- //
@@ -75,7 +76,6 @@ exports.getUserNotifications = (req, res, next) => {
         next
     ).then((usersData) => {
         if (usersData) {
-            const currentTime = new Date();
             const users = documentObjectArrayReduce(usersData);
             
             return res.status(200).send(
@@ -83,7 +83,7 @@ exports.getUserNotifications = (req, res, next) => {
                     notificationTriggeredBy : users[n.notificationTriggeredBy].fullName,
                     notificationImage : users[n.notificationTriggeredBy].profilePicture,
                     notificationText : n.notificationText,
-                    notificationDateTime : getTimeDurationString(currentTime, new Date(n.notificationDateTime))
+                    notificationDateTime : getTimeDurationString(new Date(), new Date(n.notificationDateTime))
                 }))
             );
         }
@@ -91,13 +91,160 @@ exports.getUserNotifications = (req, res, next) => {
 }
 
 
+exports.getUserNetworkInformation = async (req, res, next) => {
+
+    const userFollowers = res.locals.currentData.followers;
+    const userFollowing = res.locals.currentData.following;
+    const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
+        userID : docId, 
+        shortName : fullName.split(" ")[0],
+        profilePicture  
+    });
+
+    const userFollowersInformation = userFollowers.map((follower) => {
+        firestoreService.firebaseRead(`users/${follower}`, next);
+    });
+
+    const suggestedUsersInformation = firestoreService.firebaseReadQuery(
+        `users`,
+        [where("docId", "not-in", [...userFollowing, req.userID])],
+        next
+    );
+
+    const [resolvedUserFollowers, resolvedSuggestedUsers] = await Promise.all(
+        [Promise.all(userFollowersInformation), suggestedUsersInformation]
+    );
+
+    shuffleArray(resolvedSuggestedUsers);
+
+    return res.status(200).send({
+        followerCount : userFollowers.length,
+        myFollowers : resolvedUserFollowers.map(mapDataToRequiredFormat),
+        mySuggestedUsers : resolvedSuggestedUsers.slice(0, 20).map(mapDataToRequiredFormat) // Returns maximum 20 values
+    })
+}
+
+/*
+exports.getUserStatsInformation = (req, res, next) => {
+    return res.status(200).send({
+        // Add leaderboard rank here
+        currentPoints : res.locals.currentData?.pointCount || 0,
+        availableTickets : res.locals.currentData?.ticketCount || 0
+    })
+}
+*/
+
+exports.getUserCurrencyInformation = (req, res, next) => {
+    return res.status(200).send({
+        currentPoints : res.locals.currentData?.pointCount || 0,
+        availableTickets : res.locals.currentData?.ticketCount || 0
+    });
+}
+
+// ---------------------------------- //
+// Profile Operations
+// ---------------------------------- //
+
+exports.getUserInformation = (isFullInformation) => {
+    return async (req, res, next) => {
+
+        const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to 3)
+
+        const userInformation = {
+            fullName : res.locals.currentData.fullName,
+            profilePicture : res.locals.currentData.profilePicture,
+            courseName : res.locals.currentData?.courseName || null,        // Not applicable for non-students
+            currentYear : res.locals.currentData?.currentYear || null,      // Not applicable for non-current students
+            userType : res.locals.currentData.userType, 
+            about : res.locals.currentData.about,
+            email : res.locals.currentData.email, 
+            phoneNumber : res.locals.currentData?.phoneNumber || null,      // Not mandatory field
+            discordUsername : res.locals.currentData?.discordUsername || null   // Not mandatory field
+        }
+
+        return res.status(200).send((isFullInformation) ? {
+            ...userInformation,
+
+            followerCount : res.locals.currentData.followers.length,
+            isFollowingUser : currentUserID in res.locals.currentData.followers,
+            latestPost : await firestoreService.firebaseReadQuery(
+                `posts`,
+                [
+                    where("authorId", "==", req.userID),
+                    orderBy("postCreatedAt", "desc"),
+                    limit(1)
+                ],
+                next
+            ).then(latestPostData => {
+                return (latestPostData.length) ? formatPostData(latestPostData[0], res.locals.currentData) : null;
+            }),
+
+            profileDetails : {
+                workExperience : res.locals.currentData.profileDetails.workExperience,
+                coursesAndCertifications : res.locals.currentData.profileDetails.coursesAndCertifications,
+                skills : res.locals.currentData.profileDetails.skills
+            }
+        } : userInformation);
+    }
+}
+
+exports.updateUserInformation = async (req, res, next) => {
+
+    // Extract only fields that users are allowed to modify directly
+    const { fullName, profilePicture, courseName, currentYear, about, phoneNumber, discordUsername, profileDetails } = req.body;
+    const newUserInformation = Object.fromEntries(
+        Object.entries({ fullName, profilePicture, courseName, currentYear, about, phoneNumber, discordUsername, profileDetails })
+            .filter(([k, v]) => v != null )
+    );  // Filter out fields that are not in the request body
+
+    await firestoreService.firebaseWrite(`users/${req.userID}`, newUserInformation, next);
+    return res.status(200).send();
+        
+}
+
+exports.toggleFollower = async (req, res, next) => {
+
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to 3)
+
+    if (req.userID === currentUserID) {     
+        return res.status(403).send();      // Disallow users to toggle-follow themselves
+    }
+
+    // Update both followers (userID) and following (currentUserID)
+    const targetUserFollowers = res.locals.currentData.followers;
+    const selfFollowing = (await firestoreService.firebaseRead(`users/${currentUserID}`, next)).following;
+
+    firestoreService.firebaseWrite(
+        `users/${req.userID}`, 
+        { followers : ((targetUserFollowers.includes(currentUserID)) 
+                            ? targetUserFollowers.filter(user => user !== currentUserID)
+                            : [...targetUserFollowers, currentUserID]) },
+        next
+    )
+
+    firestoreService.firebaseWrite(
+        `users/${currentUserID}`,
+        { following : ((selfFollowing.includes(req.userID))
+                            ? selfFollowing.filter(user => user !== req.userID)
+                            : [...selfFollowing, req.userID]) },
+        next
+    )
+
+    res.status(200).send();
+}
+
+
+exports.getGeneratedCV = async (req, res, next) => {
+    return res.status(200).send(res.locals.currentData.latestCV);
+}
+
 // ---------------------------------- //
 // Misc.
 // ---------------------------------- //
-const POINTS_PER_TICKET = 100;
-
 
 exports.addPointsTicketsToUser = async (userID, numberOfPoints, next) => {
+
+    const POINTS_PER_TICKET = 100;
     
     // Read points and tickets
     const { pointCount, ticketCount } = await firestoreService.firebaseRead(`users/${userID}`);
