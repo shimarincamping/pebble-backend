@@ -19,11 +19,19 @@ userRouter.post("/", userController.assertUserEmailNotRegistered, userController
 userRouter.delete("/:id", userController.deleteUser);       // Delete a user
 
 
-// Create middleware for NOTIFICATION GENERATION and GOAL PROGRESS TRACKING
-
-
 // Sidebar and Navigation Panel
 userRouter.get("/:id/notifications", userController.getUserNotifications);
+userRouter.get("/:id/profile-information/basic", userController.getUserInformation(false));
+userRouter.get("/:id/network", userController.getUserNetworkInformation);
+userRouter.get("/:id/stats", userController.getUserStatsInformation);
+userRouter.get("/:id/currency", userController.getUserCurrencyInformation);
+
+
+// User Profile
+userRouter.get("/:id/profile-information/full", userController.getUserInformation(true));
+userRouter.put("/:id", userController.updateUserInformation);
+userRouter.put("/:id/followers", userController.toggleFollower);
+userRouter.get("/:id/cv", userController.getGeneratedCV);
 
 
 module.exports = userRouter;

@@ -9,7 +9,7 @@ exports.documentObjectArrayReduce = (arr) => {
 
 // Reduces a given array of objects
     // to a new object with a specific field's unique values as the keys
-exports.groupObjectByFieldValues = (arr, field) => {
+exports.groupObjectsByFieldValues = (arr, field) => {
     return arr.reduce((acc, { docId, ...rest }) => {
         const key = rest[field];
         acc[key] = acc[key] || [];
@@ -43,3 +43,13 @@ exports.sortObjectsByNonNumericFieldValues = (arr, sortKey, field) => {
         "Hard" : 3
     }
     // --------------------------------------------
+
+// Randomize array in-place using Durstenfeld shuffle algorithm 
+    // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+
+exports.shuffleArray = (array) => {
+    for (let i = array.length - 1; i >= 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}

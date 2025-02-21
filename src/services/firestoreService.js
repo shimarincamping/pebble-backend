@@ -22,12 +22,12 @@ exports.firebaseCreate = async (path, data, next) => {
 
 
 // Write to a document on Firestore  (CREATE with explicit ID / UPDATE)
-exports.firebaseWrite = async (path, data, next) => {
+exports.firebaseWrite = async (path, data, next, overwriteData=false) => {
     try {
         return await setDoc(
             doc(db, ...path.split("/")),
             data,
-            { merge: true }
+            { merge: !overwriteData, ignoreUndefinedProperties: true }
         );
     } catch (err) {
         return throwError(500, err, next);

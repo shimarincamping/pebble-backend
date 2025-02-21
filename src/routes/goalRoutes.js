@@ -4,7 +4,8 @@ const goalRouter = express.Router();
 const goalController = require('../controllers/goalController');
 
 
-goalRouter.get("/", goalController.getGoalData);
+// Route definitions
+goalRouter.get("/", goalController.checkLastRefresh, goalController.getGoalData);
 
 
 module.exports = goalRouter;
