@@ -21,7 +21,7 @@ const codingChallengeRoutes = require('./src/routes/codingChallengeRoutes');
 const goalRoutes = require('./src/routes/goalRoutes');
 const rewardRoutes = require('./src/routes/rewardRoutes');
 const leaderboardRoutes = require('./src/routes/leaderboardRoutes');
-
+const linkedInRoutes=require('./src/routes/linkedInRoutes');
 
 
 // Mount routers
@@ -31,6 +31,7 @@ app.use('/coding-challenges', codingChallengeRoutes);
 app.use('/goals', goalRoutes);
 app.use('/rewards', rewardRoutes);
 app.use('/leaderboard', leaderboardRoutes);
+app.use('/auth/linkedin', linkedInRoutes); 
 
 
 
