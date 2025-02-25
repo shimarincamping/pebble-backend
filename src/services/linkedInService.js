@@ -3,14 +3,13 @@ const axios= require ('axios');
 const clientId= process.env.linkedInClientId;
 const clientSecret= process.env.linkedInClientSecret; 
 const redirectURI= process.env.linkedInRedirectURI; 
-const sam= "sammy";
 
 //send a request to sync with linkedin. This process involves redirecting to the likedin auth page to obtain a code is used for the next function. 
 //w_member_social scope is used to request post access
 const startLinkedInAuth= (req, res ) => { 
     const encodedRedirectURI = encodeURIComponent(redirectURI); // URL encode redirect URI
-    // authUrl= `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodedRedirectURI}&scope=w_member_social`;
-    authUrl='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=867jokcr49viin&redirect_uri=http://localhost:4001/auth/linkedin/callback&scope=w_member_social';
+    authUrl= `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodedRedirectURI}&scope=w_member_social%20openid%20profile`;
+    // authUrl='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=867jokcr49viin&redirect_uri=http://localhost:4001/auth/linkedin/callback&scope=w_member_social';
     res.redirect(authUrl);
 }
 
@@ -34,7 +33,8 @@ const getAccessToken= async (req, res, next) => {
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
 
-         //next step would be to save this token in firebase.
+         //requires firebase storage
+         //1. store token
         console.log(accessTokenResponse.data);
         return accessTokenResponse.data;
 
@@ -45,6 +45,119 @@ const getAccessToken= async (req, res, next) => {
    
 };
 
+ const fetchLinkedInProfile = async(req, res) => {
+    
+    const ACCESS_TOKEN='AQXCy3dKCOTxpI4PXAK2ZY5g7v_5dVa-nOWl1ZTMZDzE9ZoEfocA-mqz6QRalLKGBuriLrsEFsDxqmY0KwuDCkD0VeIDiBq2hwzNwipkiY3gbTEEWhtzHzFcrNyUMNGCJ7HxnVWoeEAr2ORoeQypVLLxYgXiTaeUhOdtyWGjmdI1lwqeOX7700TEHaaqvYSm_2JRAiIO2l35b9xjFJPqdu3_hgIjI3CvqDZKWKxWZ-QDOi0HlNwKjvsYO_e_e4okkep40gwXMCrhp9qWJQGTb7Ydrg6zIHMF5YktBpcgDl2ZNzOYEZ9EeemsgqTN1wnF9cT3qb6cbPNlxyOxeapppvpinmKoww';
+    const ACCESS_TOKEN_WITH_OPENID='AQWTGHzuVH1aTjhMm7wr3qMVSdm_IgIQcP7pon5UqadxYnWtg7OtEZaEHEAXlnwX3SFVWz4hAJEDIfX9kucU-2LXKFbYY5hibBh91HJY92wbG42Gc6tJyiAEcCsi6kSpjo0TPqJozFTkTlO1rs67bpkJ33aKYroeWXeqD-qJQbEZcnelzqZEMp1RvRwpF9sIobDtU9vnKtDDe6ZizAYerakcpM2Q3Ade06HXUknD8ipYgMf0LA98yJcikfo7HuxbR3LFzNz14BRnCbMzzgblfMobcVJHZ1eFr8L5EVSyl9z2KeHvbsOtRyqeUzwuO_O5WgzxJDTT4tqqhbRaC9H5HpcoCBvpYw';
+    res.status(200);
+    try {
+        const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
+            headers: {
+                'Authorization': `Bearer ${ACCESS_TOKEN_WITH_OPENID}`
+            }
+        });
+
+        console.log(response.data);
+    } catch (error) {
+        console.error("Error fetching LinkedIn profile:", error.response?.data || error.message);
+    }
+
+}
+
+const syncPost = async (req, res) => {
+    //should accept a get request
+    //req should include userID (of the user sending this req), and postID of the post that should be synced.
+    // ----> This should only be available for posts created by the user, the button should not appear otherwise. 
+
+    //obtain the post data from firebase
+    //1.double check that the post that should be linked was created by the user sending the req
+    //2.Obtain user's access token
+    //3.send a appropriate req to the linkedin api to create the post
+    
+    if(req.query.userId && req.query.postId){
+        const linkedinUserId='QCFcnUxM1v';
+        try{
+            //async function for obtaining data from firebase
+            const reponse = await axios.post(
+                'https://api.linkedin.com/v2/ugcPosts',
+
+                {
+                    author: `urn:li:person:${linkedinUserId}`,
+                    lifecycleState: 'PUBLISHED',
+                    specificContent: {
+                        "com.linkedin.ugc.ShareContent": {
+                            shareCommentary: {
+                                text:"test test test test test"
+                            },
+                            shareMediaCategory: "NONE"
+                        }
+                },
+                    visibility: {
+                        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+                    }
+                },
+
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'X-Restli-Protocol-Version': '2.0.0',
+                        'Content-Type': 'application/json'
+                    }
+
+                }
+            );
+
+           
+
+
+
+        } catch(e){
+            console.log("Error occured while syncing post: " + e); 
+        }
+
+    }else{
+        res.status(400).send('userId or postId not found');
+    }
+}
+
+    const postTest= async (req, res)=> {
+        const linkedinUserId='QCFcnUxM1v';
+        const ACCESS_TOKEN_WITH_OPENID='AQWTGHzuVH1aTjhMm7wr3qMVSdm_IgIQcP7pon5UqadxYnWtg7OtEZaEHEAXlnwX3SFVWz4hAJEDIfX9kucU-2LXKFbYY5hibBh91HJY92wbG42Gc6tJyiAEcCsi6kSpjo0TPqJozFTkTlO1rs67bpkJ33aKYroeWXeqD-qJQbEZcnelzqZEMp1RvRwpF9sIobDtU9vnKtDDe6ZizAYerakcpM2Q3Ade06HXUknD8ipYgMf0LA98yJcikfo7HuxbR3LFzNz14BRnCbMzzgblfMobcVJHZ1eFr8L5EVSyl9z2KeHvbsOtRyqeUzwuO_O5WgzxJDTT4tqqhbRaC9H5HpcoCBvpYw';
+
+        //async function for obtaining data from firebase
+        const response = await axios.post(
+            'https://api.linkedin.com/v2/ugcPosts',
+
+            {
+                author: `urn:li:person:${linkedinUserId}`,
+                lifecycleState: 'PUBLISHED',
+                specificContent: {
+                    "com.linkedin.ugc.ShareContent": {
+                        shareCommentary: {
+                            text:"test test test test test"
+                        },
+                        shareMediaCategory: "NONE"
+                    }
+            },
+                visibility: {
+                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+                }
+            },
+
+            {
+                headers: {
+                    'Authorization': `Bearer ${ACCESS_TOKEN_WITH_OPENID}`,
+                    'X-Restli-Protocol-Version': '2.0.0',
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            );
+
+            console.log(response); 
+    }
+
+
 module.exports= {
-    startLinkedInAuth, getAccessToken
+    startLinkedInAuth, getAccessToken, syncPost , fetchLinkedInProfile , postTest
 };
