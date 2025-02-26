@@ -37,7 +37,7 @@ exports.updateUserChallengeProgress = (req, res, next) => {
 
     const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
-    if (req.body?.newProgressValue) {
+    if (req.body?.newProgressValue != null) {
         firestoreService.firebaseWrite(
             `codingChallenges/${req.codingChallengeID}`,
             { "lastAnsweredQuestion" : { [`${currentUserID}`] : req.body.newProgressValue } },
