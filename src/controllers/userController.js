@@ -175,7 +175,7 @@ exports.getUserInformation = (isFullInformation) => {
             ...basicUserInformation,
 
             followerCount : res.locals.currentData.followers.length,
-            isFollowingUser : currentUserID in res.locals.currentData.followers,
+            isFollowingUser : res.locals.currentData.followers.includes(currentUserID),
             latestPost : await firestoreService.firebaseReadQuery(
                 `posts`,
                 [

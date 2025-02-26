@@ -7,10 +7,12 @@ const app = express();
 // Misc. imports and mounts
 const dotenv = require('dotenv').config();
 const morgan = require('morgan');
+const cors = require('cors');
 const { errorHandler } = require('./src/middlewares/errorMiddleware');
 
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(cors({ origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000" }));
 
 /*===================================================================================*/
 

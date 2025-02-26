@@ -32,7 +32,7 @@ exports.formatPostData = (postData, authorUserData) => {
         postPicture : postData?.postPicture || null,
         title : postData.title,
         date : (new Date(postData.postCreatedAt).toLocaleString("default", { year: "numeric", month: "long", day: "numeric" })).toUpperCase(),
-        postDec : postData.postDesc,
+        postDesc : postData.postDesc,
         liked : postData.likes.includes(authorUserData.docId)
     }
 } 
