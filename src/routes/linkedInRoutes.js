@@ -7,14 +7,15 @@ const linkedInService= require('../services/linkedInService');
 
 // LinkedInRouter.get('/',linkedInService.startLinkedInAuth);
 
-LinkedInRouter.get('/',linkedInService.syncPost);
+LinkedInRouter.get('/',linkedInService.startLinkedInAuth);
 
 //receives the code sent from linkedin and exchanges it for an access token required for
 LinkedInRouter.get('/callback',linkedInService.handleAccessToken, linkedInService.handleLinkedInId); 
+// LinkedInRouter.get('/callback',linkedInService.handleAccessToken);
 
 LinkedInRouter.get('/newpost',linkedInService.postTest);
 
-LinkedInRouter.get('/newpost1',linkedInService.createPost);
+LinkedInRouter.get('/getID',linkedInService.handleLinkedInId);
 
 
 
