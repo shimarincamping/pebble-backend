@@ -38,15 +38,17 @@ exports.formatForumData = (forumData, forumUserData) => {
 exports.getForumData = async (req, res, next) => {
     // const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
-    const forumData = await firestoreService.firebaseReadQuery(
-        `threads`,
-        [
-            where("threadType", "==", "forum"),
-            orderBy("threadDateTime", "desc"),
-            req.query.limit && limit(req.query.limit),
-        ].filter(Boolean),
-        next
-    );
+    const forumData = (
+        await firestoreService.firebaseReadQuery(
+            `threads`,
+            [
+                where("threadType", "==", "forum"),
+                orderBy("threadDateTime", "desc"),
+                req.query.limit && limit(req.query.limit),
+            ].filter(Boolean),
+            next
+        )
+    ).filter((p) => p.isContentVisible); // Avoid fetching data for invisible posts;
 
     const modifiedForumData = await Promise.all(
         forumData.map(async (p) => {

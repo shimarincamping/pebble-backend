@@ -142,7 +142,7 @@ exports.approveContentVisibility = async (req, res, next) => {
                 next
             );
 
-            await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
             return res.status(200).send();
 
         case "post":
@@ -156,6 +156,8 @@ exports.approveContentVisibility = async (req, res, next) => {
                 { isContentVisible: true },
                 next
             );
+
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
             return res.status(200).send();
 
         case "threadComment":
@@ -180,6 +182,7 @@ exports.approveContentVisibility = async (req, res, next) => {
                 next
             );
 
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
             return res.status(200).send();
 
         case "postComment":
@@ -204,6 +207,31 @@ exports.approveContentVisibility = async (req, res, next) => {
                 next
             );
 
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
+            return res.status(200).send();
+    }
+};
+
+exports.denyContentVisibility = async (req, res, next) => {
+    const flaggedData = res.locals.currentData;
+    const flaggedDataType = flaggedData.contentType;
+
+    // Has 4 kinds of data it can receive
+    switch (flaggedDataType) {
+        case "thread":
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
+            return res.status(200).send();
+
+        case "post":
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
+            return res.status(200).send();
+
+        case "threadComment":
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
+            return res.status(200).send();
+
+        case "postComment":
+            // await firestoreService.firebaseDelete(`flags/${flaggedData.docId}`);
             return res.status(200).send();
     }
     return res.status(403).send();
