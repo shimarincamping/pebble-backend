@@ -27,6 +27,7 @@ const rewardRoutes = require("./src/routes/rewardRoutes");
 const leaderboardRoutes = require("./src/routes/leaderboardRoutes");
 const forumRoutes = require("./src/routes/forumRoutes");
 const roadmapRoutes = require("./src/routes/roadmapRoutes");
+const moderatorRoutes = require("./src/routes/moderatorRoutes");
 
 // Mount routers
 app.use("/users", userRoutes);
@@ -37,6 +38,7 @@ app.use("/rewards", rewardRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/forum", forumRoutes);
 app.use("/roadmap", roadmapRoutes);
+app.use("/moderator", moderatorRoutes);
 
 /*===================================================================================*/
 
