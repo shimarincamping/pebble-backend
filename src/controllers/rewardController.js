@@ -85,8 +85,6 @@ exports.addNewReward = async (req, res, next) => {
         );
     }
 };
-
-exports.sendToEmail = async (req, res, next) => {};
 // For wheel spinning:
 // - Remember to add points to user if they win points
 // - Remember to increment the relevant goal associated with spinning wheels
