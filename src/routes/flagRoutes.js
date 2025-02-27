@@ -17,5 +17,6 @@ flagRouter.use("/:id", flagController.assertFlagExists);
 
 // Approve or delete content
 flagRouter.put("/:id/approve", flagController.approveContentVisibility);
+flagRouter.put("/:id/deny", flagController.denyContentVisibility);
 
 module.exports = flagRouter;
