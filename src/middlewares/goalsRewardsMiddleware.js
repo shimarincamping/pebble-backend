@@ -22,13 +22,6 @@ exports.updateGoalProgress = async (goalID, userID, next, increment=1) => {
     if (newUserProgress >= progressMax) { // Award points if new progress reaches the target (max)
         this.addPointsTicketsToUser(userID, goalPoints, next);
     }
-
-    /*
-        Unhandled goals:
-            SwmK4rU6fRKsH9zKIX1Z - Spin the Wheel
-            YtyiZfQUZF0UrUSTViPE - Make Your First Post
-            ke07miaMSI6icNq48sWB - Read Your First Career Roadmap
-    */
 }
 
 exports.addPointsTicketsToUser = async (userID, numberOfPoints, next) => {

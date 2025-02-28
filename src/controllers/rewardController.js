@@ -1,9 +1,9 @@
 const nodemailer = require("nodemailer");
 const firestoreService = require("../services/firestoreService");
 const { where } = require("firebase/firestore");
-const {
-    addPointsTicketsToUser,
-} = require("../middlewares/goalsRewardsMiddleware");
+const { addPointsTicketsToUser, updateGoalProgress} = require("../middlewares/goalsRewardsMiddleware");
+
+
 exports.getAllRewards = async (req, res, next) => {
     const allRewardsData = await firestoreService.firebaseReadAll(
         `rewards`,
@@ -25,7 +25,7 @@ exports.assertTicketExists = async (req, res, next) => {
         next();
     } else {
         res.status(404).send(
-            `ticket count is not enough, currently: ${ticketCount}`
+            `Ticket count is not enough, currently: ${ticketCount}`
         );
     }
 };
@@ -83,8 +83,8 @@ exports.addNewReward = async (req, res, next) => {
             { ticketCount: newTicketCount },
             next
         );
+
+        // Increment goal related to spinning the wheel
+        updateGoalProgress("SwmK4rU6fRKsH9zKIX1Z", currentUserID, next);
     }
 };
-// For wheel spinning:
-// - Remember to add points to user if they win points
-// - Remember to increment the relevant goal associated with spinning wheels
