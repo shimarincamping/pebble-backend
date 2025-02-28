@@ -1,9 +1,11 @@
 const nodemailer = require("nodemailer");
 const firestoreService = require("../services/firestoreService");
 const { where } = require("firebase/firestore");
-const { addPointsTicketsToUser, updateGoalProgress} = require("../middlewares/goalsRewardsMiddleware");
-
-
+const {
+    addPointsTicketsToUser,
+    updateGoalProgress,
+} = require("../middlewares/goalsRewardsMiddleware");
+const { getIntegerFromString } = require("../utils/dataManipulationUtils");
 exports.getAllRewards = async (req, res, next) => {
     const allRewardsData = await firestoreService.firebaseReadAll(
         `rewards`,
@@ -21,8 +23,7 @@ exports.assertTicketExists = async (req, res, next) => {
     );
 
     if (ticketCount >= 1) {
-        res.status(200).send();
-        next();
+        return next();
     } else {
         res.status(404).send(
             `Ticket count is not enough, currently: ${ticketCount}`
@@ -38,9 +39,10 @@ exports.addNewReward = async (req, res, next) => {
     const newTicketCount = ticketCount - 1;
     const rewardName = req.body.rewardName;
 
-    if (rewardName == "+10 Points") {
-        addPointsTicketsToUser(currentUserID, 10, next);
-        res.status(200).send();
+    const pointNumber = +getIntegerFromString(rewardName);
+
+    if (pointNumber) {
+        addPointsTicketsToUser(currentUserID, pointNumber, next);
     } else {
         const { email } = await firestoreService.firebaseRead(
             `users/${currentUserID}`,
@@ -77,14 +79,15 @@ exports.addNewReward = async (req, res, next) => {
                 console.log("email sent: ", info.response);
             }
         });
-
-        firestoreService.firebaseWrite(
-            `users/${currentUserID}`,
-            { ticketCount: newTicketCount },
-            next
-        );
-
-        // Increment goal related to spinning the wheel
-        updateGoalProgress("SwmK4rU6fRKsH9zKIX1Z", currentUserID, next);
     }
+
+    firestoreService.firebaseWrite(
+        `users/${currentUserID}`,
+        { ticketCount: newTicketCount },
+        next
+    );
+
+    // Increment goal related to spinning the wheel
+    updateGoalProgress("SwmK4rU6fRKsH9zKIX1Z", currentUserID, next);
+    res.status(200).send(rewardName);
 };
