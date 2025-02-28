@@ -4,6 +4,7 @@ const { where } = require("firebase/firestore");
 const {
     addPointsTicketsToUser,
 } = require("../middlewares/goalsRewardsMiddleware");
+const { getIntegerFromString } = require("../utils/dataManipulationUtils");
 exports.getAllRewards = async (req, res, next) => {
     const allRewardsData = await firestoreService.firebaseReadAll(
         `rewards`,
@@ -21,8 +22,7 @@ exports.assertTicketExists = async (req, res, next) => {
     );
 
     if (ticketCount >= 1) {
-        res.status(200).send();
-        next();
+        return next();
     } else {
         res.status(404).send(
             `ticket count is not enough, currently: ${ticketCount}`
@@ -38,9 +38,10 @@ exports.addNewReward = async (req, res, next) => {
     const newTicketCount = ticketCount - 1;
     const rewardName = req.body.rewardName;
 
-    if (rewardName == "+10 Points") {
-        addPointsTicketsToUser(currentUserID, 10, next);
-        res.status(200).send();
+    const pointNumber = +getIntegerFromString(rewardName);
+
+    if (pointNumber) {
+        addPointsTicketsToUser(currentUserID, pointNumber, next);
     } else {
         const { email } = await firestoreService.firebaseRead(
             `users/${currentUserID}`,
@@ -77,13 +78,14 @@ exports.addNewReward = async (req, res, next) => {
                 console.log("email sent: ", info.response);
             }
         });
-
-        firestoreService.firebaseWrite(
-            `users/${currentUserID}`,
-            { ticketCount: newTicketCount },
-            next
-        );
     }
+
+    firestoreService.firebaseWrite(
+        `users/${currentUserID}`,
+        { ticketCount: newTicketCount },
+        next
+    );
+    res.status(200).send(rewardName);
 };
 // For wheel spinning:
 // - Remember to add points to user if they win points
