@@ -3,10 +3,9 @@ const documentExistsMiddleware = require("../middlewares/documentExistsMiddlewar
 
 const { where, orderBy, limit } = require("firebase/firestore");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
-const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
+const { generateNotification } = require("../middlewares/notificationsMiddleware");
+
+
 exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
 };
@@ -101,11 +100,6 @@ exports.toggleThreadLike = async (req, res, next) => {
             next
         );
 
-        // Increment goal relating to liking threads  (does not track if threads are unique)
-        if (!currentThreadLikes.includes(currentUserID)) {
-            updateGoalProgress("47xTsBcAVacMqhbQtPJI", currentUserID, next);
-        }
-
         return res.status(200).send();
     }
 
@@ -171,10 +165,6 @@ exports.addNewComment = async (req, res, next) => {
                 next
             );
         }
-
-        // Increment goals relating to commenting on posts
-        updateGoalProgress("6KEhhVyLIslQIIAQ7922", currentUserID, next);
-        updateGoalProgress("WrPLjOKRriIsHZXIgB85", currentUserID, next);
 
         return res.status(200).send();
     }

@@ -15,11 +15,4 @@ exports.generateNotification = async (userID, notificationTriggeredBy, notificat
         { notifications : [newNotification, ...notifications] },
         next
     )
-
-    /*
-        Unhandled notification types:
-            - New thread comment
-            - New thread comment reply
-    */
-
 }

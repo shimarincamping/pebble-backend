@@ -2,10 +2,6 @@ const firestoreService = require("../services/firestoreService");
 const documentExistsMiddleware = require("../middlewares/documentExistsMiddleware");
 
 const { where, orderBy, limit } = require("firebase/firestore");
-const { getTimeDurationString } = require("../utils/dateTimeUtils");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
 
 exports.assertThreadExists = (req, res, next) => {
@@ -24,8 +20,6 @@ exports.formatRoadmapData = (roadmapData) => {
 };
 
 exports.getRoadmapData = async (req, res, next) => {
-    // const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
-
     const roadmapData = await firestoreService.firebaseReadQuery(
         `threads`,
         [
@@ -40,6 +34,12 @@ exports.getRoadmapData = async (req, res, next) => {
 };
 
 exports.getSingleThreadData = async (req, res, next) => {
+
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    
+    // Increment goal related to reading career roadmap
+    updateGoalProgress("ke07miaMSI6icNq48sWB", currentUserID, next);
+
     return res.status(200).send(this.formatRoadmapData(res.locals.currentData));
 };
 
