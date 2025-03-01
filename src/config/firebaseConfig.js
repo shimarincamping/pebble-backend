@@ -3,6 +3,10 @@ const { getFirestore } = require( "firebase/firestore");
 const { getStorage } = require("firebase/storage");
 const { getAuth } = require("firebase/auth");
 
+require("dotenv").config(); // Ensure dotenv is loaded
+
+console.log("API Key from .env:", process.env.API_KEY); // Debugging line
+
 // Firebase Config (uses environment variables)
 const firebaseConfig = {
   apiKey: process.env.API_KEY,
@@ -21,7 +25,8 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
+
 // Export for use in other files
 module.exports = { 
-  db, storage, auth 
+  app, db, storage, auth
 };
