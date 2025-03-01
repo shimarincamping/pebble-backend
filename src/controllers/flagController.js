@@ -30,6 +30,8 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                 postTitle: contentData.threadTitle,
                 postAuthor: authorUserData.fullName,
                 content: contentData.threadDescription,
+                authorCourse: authorUserData.courseName || null,
+                contentType: "thread",
             };
 
         case "post":
@@ -46,8 +48,11 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                 ),
                 profilePic: authorUserData.profilePicture,
                 postTitle: contentData.title,
+                authorCourse: authorUserData.courseName || null,
+                postImage: contentData.postPicture || null,
                 postAuthor: authorUserData.fullName,
                 content: contentData.postDesc,
+                contentType: "post",
             };
 
         case "threadComment":
@@ -69,6 +74,8 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.threadTitle,
                         postAuthor: authorUserData.fullName,
                         content: c.commentDetails,
+                        contentType: "thread Comment",
+                        authorCourse: authorUserData.courseName || null,
                     };
                 }
             });
@@ -94,6 +101,8 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.title,
                         postAuthor: authorUserData.fullName,
                         content: c.text,
+                        contentType: "post Comment",
+                        authorCourse: authorUserData.courseName || null,
                     };
                 }
             });
