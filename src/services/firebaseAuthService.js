@@ -1,28 +1,34 @@
-// THIS FILE HAS NOT YET BEEN REFACTORED.
+const { auth } = require("../config/firebaseConfig");
+const { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } = require("firebase/auth");
+const { generateJwtToken } = require("../services/jwtService");
 
-/*
-// Create a new user in Firebase Authentication
-const createUser = tryCatch(async (email, password) => {
+// Register a new user
+const registerUser = async (email, password) => {
+  try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  });
-  
-  // Login a user in Firebase Authentication
-  const loginUser = tryCatch(async (email, password) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  });
-  
-  // Logout a user from Firebase Authentication
-  const logoutUser = tryCatch(async () => {
-    await signOut(auth);
-    return { success: true, message: "User signed out successfully" };
-  });
-  
-  // Delete a user from Firebase Authentication
-  const deleteUserAccount = tryCatch(async (user) => {
-    await deleteUser(user);
-    return { success: true, message: "User account deleted successfully" };
-  });
+    return { uid: userCredential.user.uid, email: userCredential.user.email };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
 
-  */
+// Login a user (Generates JWT token)
+const loginUser = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseToken = await userCredential.user.getIdToken(); // Get Firebase Auth token
+    const jwtToken = generateJwtToken(userCredential.user); // Generate JWT
+
+    return { uid: userCredential.user.uid, email: userCredential.user.email, firebaseToken, jwtToken };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+// Logout a user
+const logoutUser = async () => {
+  const auth = getAuth();
+  await signOut(auth);
+};
+
+module.exports = { registerUser, loginUser, logoutUser };

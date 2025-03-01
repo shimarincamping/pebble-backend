@@ -8,6 +8,7 @@ const app = express();
 const dotenv = require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
+const authRoutes = require("./src/routes/authRoutes");
 const { errorHandler } = require("./src/middlewares/errorMiddleware");
 
 app.use(express.json());
@@ -37,6 +38,7 @@ app.use("/rewards", rewardRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/forum", forumRoutes);
 app.use("/roadmap", roadmapRoutes);
+app.use("/auth", authRoutes);
 
 /*===================================================================================*/
 
@@ -52,3 +54,6 @@ app.listen(PORT, () => {
 });
 
 /*===================================================================================*/
+
+
+
