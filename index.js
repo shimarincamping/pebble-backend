@@ -28,6 +28,8 @@ const rewardRoutes = require("./src/routes/rewardRoutes");
 const leaderboardRoutes = require("./src/routes/leaderboardRoutes");
 const forumRoutes = require("./src/routes/forumRoutes");
 const roadmapRoutes = require("./src/routes/roadmapRoutes");
+const flagRoutes = require("./src/routes/flagRoutes");
+const linkedInRoutes=require('./src/routes/linkedInRoutes');
 
 // Mount routers
 app.use("/users", userRoutes);
@@ -39,6 +41,8 @@ app.use("/leaderboard", leaderboardRoutes);
 app.use("/forum", forumRoutes);
 app.use("/roadmap", roadmapRoutes);
 app.use("/auth", authRoutes);
+app.use("/flags", flagRoutes);
+app.use('/auth/linkedin', linkedInRoutes); 
 
 /*===================================================================================*/
 

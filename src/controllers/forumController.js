@@ -3,10 +3,9 @@ const documentExistsMiddleware = require("../middlewares/documentExistsMiddlewar
 
 const { where, orderBy, limit } = require("firebase/firestore");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
-const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
+const { generateNotification } = require("../middlewares/notificationsMiddleware");
+
+
 exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
 };
@@ -36,17 +35,19 @@ exports.formatForumData = (forumData, forumUserData) => {
 };
 
 exports.getForumData = async (req, res, next) => {
-    // const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
-    const forumData = await firestoreService.firebaseReadQuery(
-        `threads`,
-        [
-            where("threadType", "==", "forum"),
-            orderBy("threadDateTime", "desc"),
-            req.query.limit && limit(req.query.limit),
-        ].filter(Boolean),
-        next
-    );
+    const forumData = (
+        await firestoreService.firebaseReadQuery(
+            `threads`,
+            [
+                where("threadType", "==", "forum"),
+                orderBy("threadDateTime", "desc"),
+                req.query.limit && limit(req.query.limit),
+            ].filter(Boolean),
+            next
+        )
+    ).filter((p) => p.isContentVisible); // Avoid fetching data for invisible posts;
 
     const modifiedForumData = await Promise.all(
         forumData.map(async (p) => {
@@ -98,11 +99,6 @@ exports.toggleThreadLike = async (req, res, next) => {
             "liked your thread",
             next
         );
-
-        // Increment goal relating to liking threads  (does not track if threads are unique)
-        if (!currentThreadLikes.includes(currentUserID)) {
-            updateGoalProgress("47xTsBcAVacMqhbQtPJI", currentUserID, next);
-        }
 
         return res.status(200).send();
     }
@@ -169,10 +165,6 @@ exports.addNewComment = async (req, res, next) => {
                 next
             );
         }
-
-        // Increment goals relating to commenting on posts
-        updateGoalProgress("6KEhhVyLIslQIIAQ7922", currentUserID, next);
-        updateGoalProgress("WrPLjOKRriIsHZXIgB85", currentUserID, next);
 
         return res.status(200).send();
     }
