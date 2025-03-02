@@ -130,7 +130,8 @@ const getDiscriminatorOutput = async (req, res, next) => {
         const geminiOutput = await gemini20flash.generateContent(prompt); 
         const discriminatorOutput = geminiOutput.response.text();
         console.log("result@getDiscriminatorOutput: ", discriminatorOutput);
-        res.status(200).send(discriminatorOutput);
+        req.discriminatorOutput=discriminatorOutput;
+        next();
 
     }catch(e){
         console.error("An Error occured while calling gemini 2.0 flash : ",e );
@@ -138,8 +139,20 @@ const getDiscriminatorOutput = async (req, res, next) => {
     }
 }
 
+const parseFlag = async (req, res, next) => {
+    //who's JASON and why can't my code parse him :sad
+    try{
+        const cleanedJsonString = req.discriminatorOutput.replace(/^```json\s*|```$/g, '');
+        const flag=JSON.parse(cleanedJsonString).Flag;
+        console.log("req.discriminatorOutput@parseFlag: ",flag); 
+        res.status(200).send(flag);
+    }catch(e){
+        console.error("An error occured while flagging the comment on firebase: ",e );
+        next(e);
+    }
+}
 
 module.exports= {
-    getGeneratorOutput, getDiscriminatorOutput
+    getGeneratorOutput, getDiscriminatorOutput, parseFlag
 };
     
