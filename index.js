@@ -29,6 +29,7 @@ const forumRoutes = require("./src/routes/forumRoutes");
 const roadmapRoutes = require("./src/routes/roadmapRoutes");
 const flagRoutes = require("./src/routes/flagRoutes");
 const linkedInRoutes=require('./src/routes/linkedInRoutes');
+const sentimentAnalysisRoutes = require ('./src/routes/sentimentAnalysisRoutes');
 
 // Mount routers
 app.use("/users", userRoutes);
@@ -41,6 +42,7 @@ app.use("/forum", forumRoutes);
 app.use("/roadmap", roadmapRoutes);
 app.use("/flags", flagRoutes);
 app.use('/auth/linkedin', linkedInRoutes); 
+app.use('/flag',sentimentAnalysisRoutes);
 
 /*===================================================================================*/
 
