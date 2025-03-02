@@ -14,7 +14,10 @@ const { errorHandler } = require("./src/middlewares/errorMiddleware");
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
-    cors({ origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000" })
+    cors({
+        origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000",
+        credentials: true,  
+    })
 );
 
 /*===================================================================================*/

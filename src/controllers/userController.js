@@ -95,37 +95,42 @@ exports.getUserNotifications = (req, res, next) => {
 
 
 exports.getUserNetworkInformation = async (req, res, next) => {
+    try {
+        const userFollowers = res.locals.currentData.followers || [];
+        const userFollowing = res.locals.currentData.following || [];
+        
+        const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
+            userID: docId, 
+            shortName: fullName.split(" ")[0],
+            profilePicture  
+        });
 
-    const userFollowers = res.locals.currentData.followers;
-    const userFollowing = res.locals.currentData.following;
-    const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
-        userID : docId, 
-        shortName : fullName.split(" ")[0],
-        profilePicture  
-    });
+        const userFollowersInformation = await Promise.all(
+            userFollowers.map(follower => firestoreService.firebaseRead(`users/${follower}`, next))
+        );
+        
+        const suggestedUsersInformation = userFollowing.length 
+            ? firestoreService.firebaseReadQuery(`users`, [where("docId", "not-in", [...userFollowing, req.userID])], next) 
+            : Promise.resolve([]); // Prevent Firestore query failure
 
-    const userFollowersInformation = userFollowers.map((follower) => {
-        firestoreService.firebaseRead(`users/${follower}`, next);
-    });
+        const [resolvedUserFollowers, resolvedSuggestedUsers] = await Promise.all([
+            Promise.all(userFollowersInformation),
+            suggestedUsersInformation
+        ]);
 
-    const suggestedUsersInformation = firestoreService.firebaseReadQuery(
-        `users`,
-        [where("docId", "not-in", [...userFollowing, req.userID])],
-        next
-    );
+        shuffleArray(resolvedSuggestedUsers);
 
-    const [resolvedUserFollowers, resolvedSuggestedUsers] = await Promise.all(
-        [Promise.all(userFollowersInformation), suggestedUsersInformation]
-    );
+        return res.status(200).send({
+            followerCount: userFollowers.length,
+            myFollowers: resolvedUserFollowers.map(mapDataToRequiredFormat),
+            mySuggestedUsers: resolvedSuggestedUsers.slice(0, 20).map(mapDataToRequiredFormat)
+        });
 
-    shuffleArray(resolvedSuggestedUsers);
-
-    return res.status(200).send({
-        followerCount : userFollowers.length,
-        myFollowers : resolvedUserFollowers.map(mapDataToRequiredFormat),
-        mySuggestedUsers : resolvedSuggestedUsers.slice(0, 20).map(mapDataToRequiredFormat) // Returns maximum 20 values
-    })
-}
+    } catch (error) {
+        console.error("Error fetching user network information:", error);
+        return res.status(500).send({ error: "Failed to load network information" });
+    }
+};
 
 exports.getUserStatsInformation = async (req, res, next) => {
     return res.status(200).send({

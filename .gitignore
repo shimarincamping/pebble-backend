@@ -109,4 +109,4 @@ dist
 .tern-port
 
 #Firestore Controller File
-controllers/firestore_controller.js
+./controllers/firestore_controller.js
