@@ -107,3 +107,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+#Firestore Controller File
+./controllers/firestore_controller.js
