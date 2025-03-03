@@ -7,7 +7,7 @@ const forumController = require("../controllers/forumController");
 forumRouter.get("/", forumController.getForumData);
 
 // Create new forum thread
-forumRouter.post("/createPost", forumController.addNewThread);
+forumRouter.post("/createForumThread", forumController.addNewThread);
 
 // Pre-processes all routes that contain an ID parameter
 forumRouter.param("id", (req, res, next, id) => {
