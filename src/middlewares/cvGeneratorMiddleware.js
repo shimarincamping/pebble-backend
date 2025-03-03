@@ -1,5 +1,6 @@
 const geminiService= require('../services/geminiService');
 const firestoreService = require('../services/firestoreService');
+const { where } = require("firebase/firestore");
 
 const role = `  You are a CV generator that creates custom CV templates for students based on a provided job description and additional information about the student. `;
 
@@ -118,4 +119,44 @@ The CV should be formatted in a JSON and nothing else. Include the following ele
 17.ExperienceDescC: The description for education C
 `;
 
+//required queries: currentUserID & jobDesc
+const generateCV = async (req, res, next) => {
+  try{
+    
+    const { about, courseName, currentYear, email, fullName, phoneNumber, profileDetails } = await firestoreService.firebaseRead(`users/${req.query.currentUserID}`, next);
+   
+    console.log(`\nreq.query.currentUserID@generateCV: ${req.query.currentUserID}\n`)
+    const posts = (
+      await firestoreService.firebaseReadQuery(
+      `posts`,
+      [where("authorId","==", req.query.currentUserID),], 
+      next
+    ));
+   
+    console.log(`profileDetails@generateCv: ${profileDetails[0]}`);
+    console.log(`fullName@generateCv: ${fullName}`);
+    console.log(`about@generateCv: ${about}`);
+    console.log(`posts@generateCv: ${posts}`);
 
+    const prompt= `${role} ${instructions} ${formattingInstructions}
+                  job desc: ${req.query.jobDesc}
+                  profile information: about->${about}, courseName --> ${courseName}, current year -> ${currentYear}, email-> ${ email}, fullName->${fullName}, 
+                  contact no->${phoneNumber}, profile->details${profileDetails}
+                  post information: ${posts}
+              `;
+    const geminiOutput = await geminiService.gemini15Flash.generateContent(prompt);
+    
+    //remove gemini headers
+    CV = geminiOutput.response.text().replace(/^```json\s*|```$/g, '');
+
+    console.log(`CV.response.text()@generateCV: ${CV} `)
+    res.status(200).send(CV);
+ 
+  }catch(e){
+    console.error(e);
+    next(e);
+  }
+  
+}
+
+module.exports = {generateCV};
