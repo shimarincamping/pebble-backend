@@ -15,13 +15,23 @@ const registerUser = async (email, password) => {
 // Login a user (Generates JWT token)
 const loginUser = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const firebaseToken = await userCredential.user.getIdToken(); // Get Firebase Auth token
-    const jwtToken = generateJwtToken(userCredential.user); // Generate JWT
+      console.log("Attempting login for:", email); // Debugging
 
-    return { uid: userCredential.user.uid, email: userCredential.user.email, firebaseToken, jwtToken };
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseToken = await userCredential.user.getIdToken(); // Get Firebase Auth token
+      const jwtToken = generateJwtToken(userCredential.user); // Generate JWT
+
+      console.log("User authenticated:", userCredential.user.email);
+
+      return { 
+          uid: userCredential.user.uid, 
+          email: userCredential.user.email, 
+          firebaseToken, 
+          jwtToken 
+      };
   } catch (error) {
-    return { error: error.message };
+      console.error("Firebase login error:", error.message);
+      throw new Error("Invalid email or password"); // 🔴 Ensure invalid logins return an error
   }
 };
 
