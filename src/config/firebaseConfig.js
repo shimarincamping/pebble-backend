@@ -5,8 +5,6 @@ const { getAuth } = require("firebase/auth");
 
 require("dotenv").config(); // Ensure dotenv is loaded
 
-console.log("API Key from .env:", process.env.API_KEY); // Debugging line
-
 // Firebase Config (uses environment variables)
 const firebaseConfig = {
   apiKey: process.env.API_KEY,

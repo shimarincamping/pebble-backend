@@ -24,10 +24,10 @@ authRouter.post("/register", async (req, res) => {
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const { firebaseToken, jwtToken } = await loginUser(email, password);
-    res.json({ firebaseToken, jwtToken });
+    const result = await loginUser(email, password);
+    res.json(result);
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    res.status(401).json({ error: "Invalid email or password" }); // 🔴 Ensure only valid users log in
   }
 });
 
