@@ -1,4 +1,3 @@
-const axios= require ('axios');
 const firestoreService = require('../services/firestoreService');
 
 const clientId= process.env.linkedInClientId;

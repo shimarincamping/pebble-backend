@@ -14,7 +14,10 @@ const { errorHandler } = require("./src/middlewares/errorMiddleware");
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
-    cors({ origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000" })
+    cors({
+        origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000",
+        credentials: true,  
+    })
 );
 
 /*===================================================================================*/
@@ -30,6 +33,7 @@ const forumRoutes = require("./src/routes/forumRoutes");
 const roadmapRoutes = require("./src/routes/roadmapRoutes");
 const flagRoutes = require("./src/routes/flagRoutes");
 const linkedInRoutes=require('./src/routes/linkedInRoutes');
+const sentimentAnalysisRoutes = require ('./src/routes/sentimentAnalysisRoutes');
 
 // Mount routers
 app.use("/users", userRoutes);
@@ -43,6 +47,7 @@ app.use("/roadmap", roadmapRoutes);
 app.use("/auth", authRoutes);
 app.use("/flags", flagRoutes);
 app.use('/auth/linkedin', linkedInRoutes); 
+app.use('/flag',sentimentAnalysisRoutes);
 
 /*===================================================================================*/
 
@@ -59,5 +64,4 @@ app.listen(PORT, () => {
 
 /*===================================================================================*/
 
-
-
+//const pushDataToFirestore = require("./src/controllers/firestoreController.js");
