@@ -121,8 +121,14 @@ exports.getSinglePostData = async (req, res, next) => {
 };
 
 exports.editPost = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
     if (!req.body?.newPostContent) {
         return res.status(400).send(`Missing expected value in request body: newPostContent`);
+    }
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return res.status(403).send();
     }
 
     await firestoreService.firebaseWrite(
@@ -135,6 +141,12 @@ exports.editPost = async (req, res, next) => {
 }
 
 exports.deletePost = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return res.status(403).send();
+    }
+
     await firestoreService.firebaseWrite(
         `posts/${res.locals.currentData.docId}`, 
         { isContentVisible : false },
