@@ -83,6 +83,7 @@ exports.getUserNotifications = (req, res, next) => {
             
             return res.status(200).send(
                 notifications.map(n => ({
+                    notificationTriggeredByID : n.notificationTriggeredBy,
                     notificationTriggeredBy : users[n.notificationTriggeredBy].fullName,
                     notificationImage : users[n.notificationTriggeredBy].profilePicture,
                     notificationText : n.notificationText,
@@ -185,6 +186,7 @@ exports.getUserInformation = (isFullInformation) => {
                 `posts`,
                 [
                     where("authorId", "==", req.userID),
+                    where("isContentVisible", "==", true),
                     orderBy("postCreatedAt", "desc"),
                     limit(1)
                 ],
