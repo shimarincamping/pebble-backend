@@ -3,8 +3,9 @@ const documentExistsMiddleware = require("../middlewares/documentExistsMiddlewar
 
 const { where, orderBy, limit } = require("firebase/firestore");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
-const { generateNotification } = require("../middlewares/notificationsMiddleware");
-
+const {
+    generateNotification,
+} = require("../middlewares/notificationsMiddleware");
 
 exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
@@ -61,16 +62,24 @@ exports.getForumData = async (req, res, next) => {
     return res.status(200).send(modifiedForumData);
 };
 
+exports.concatForumComments = (o1, o2) => {
+    return { ...o1, comments: o2 };
+};
+
 exports.getSingleThreadData = async (req, res, next) => {
+    const threadComments = await this.getThreadComments(req, res, next);
     return res
         .status(200)
         .send(
-            this.formatForumData(
-                res.locals.currentData,
-                await firestoreService.firebaseRead(
-                    `users/${res.locals.currentData.authorId}`,
-                    next
-                )
+            this.concatForumComments(
+                this.formatForumData(
+                    res.locals.currentData,
+                    await firestoreService.firebaseRead(
+                        `users/${res.locals.currentData.authorId}`,
+                        next
+                    )
+                ),
+                threadComments
             )
         );
 };
@@ -132,7 +141,8 @@ exports.getThreadComments = async (req, res, next) => {
         });
 
     const resolvedThreadComments = await Promise.all(currentThreadComments);
-    res.status(200).send(resolvedThreadComments);
+    // res.status(200).send(resolvedThreadComments);
+    return resolvedThreadComments;
 };
 
 exports.addNewComment = async (req, res, next) => {
