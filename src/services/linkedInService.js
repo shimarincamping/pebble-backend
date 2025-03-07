@@ -12,7 +12,7 @@ const currentUserID='3oMAV7h8tmHVMR8Vpv9B';
 //creates linkedin post if previously authenticated. Starts authentication process first otherwise
 const startSync= async (req, res, next) => {
     try{
-
+        // setTimeout(200); 
         //the following data should eventually be available from the request
 
         const postID='7cLmdmo1IkazHx48qXiu';

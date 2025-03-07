@@ -91,7 +91,9 @@ const discriminatorFormatInstuctions= `Your output should be in the form of a JS
                                                  based on your assessment of the previous model's output. 
                                         3. flagExplanation: Breakdown your thought process for why the content should be flagged. 
                                         `;
-                        
+
+//requires 'text', 'contentID', 'postType','commentID' as queries. 
+// ContentID is the docID of the selected content. 
 const getGeneratorOutput = async (req ,res, next) => {
     try{
 
@@ -137,14 +139,65 @@ const parseFlag = async (req, res, next) => {
         const cleanedJsonString = req.discriminatorOutput.replace(/^```json\s*|```$/g, '');
         const flag=JSON.parse(cleanedJsonString).Flag;
         console.log("req.discriminatorOutput@parseFlag: ",flag); 
-        res.status(200).send(flag);
+        if (flag == 'yes'){
+            next();
+        }else{
+            res.status(200).send(flag);
+        }
+        
     }catch(e){
         console.error("An error occured while flagging the comment on firebase: ",e );
         next(e);
     }
 }
 
+const writeFlag = async (req, res, next) => {
+    try{
+        let newFlag="";
+        const contentType =req.query.postType;
+
+        if(contentType=='post'){
+            //content ID is the unique identifier for a piece of content, it's the docID for that piece of content. The docID listed in flags, is the docID for the flags, not the content. 
+            //what am I saying anyway
+            const { authorId } = await firestoreService.firebaseRead(`posts/${req.query.contentID}`, next); 
+
+            newFlag = {
+                authorID : authorId,
+                contentID : req.query.contentID,
+                contentType : contentType,
+            }
+
+            await firestoreService.firebaseCreate(`flags`, newFlag, next);
+            res.status(200);
+        }else if (contentType=='postComment'){
+            const comments = await firestoreService.firebaseReadQuery(
+                `posts/${req.query.contentID}`, 
+                [where("commentID","==", req.query.commentID)],
+                next);
+            const commentAuthorID=comments.authorID; 
+
+        }else if (contentType=='thread'){
+            const { authorId } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next);
+
+        }else if (contentType=='threadComment'){
+            const comments = await firestoreService.firebaseReadQuery(
+                `threads/${req.query.contentID}}`,
+                [where("commentID","==",req.query.commentID)]
+            )
+        }
+
+        
+
+
+    }catch(e){
+        console.error(e);
+        next(e);
+    }
+    
+    
+}
+
 module.exports= {
-    getGeneratorOutput, getDiscriminatorOutput, parseFlag
+    getGeneratorOutput, getDiscriminatorOutput, parseFlag, writeFlag
 };
 
