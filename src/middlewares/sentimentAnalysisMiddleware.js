@@ -1,5 +1,6 @@
 const geminiService= require('../services/geminiService');
 const firestoreService = require('../services/firestoreService');
+const { where } = require("firebase/firestore");
 
 const generatorRole=  `
         Your role is called the generator. You will be given a piece of text. You must assess the sentiment of the provided text to understand 
@@ -153,37 +154,94 @@ const parseFlag = async (req, res, next) => {
 
 const writeFlag = async (req, res, next) => {
     try{
-        let newFlag="";
+
+        //handle requests that don't include complete information
+        if (!req.query.postType || !req.query.contentID){
+            res.status(400).send("Request is missing postType or ContentID");
+        }
+
+        if ((req.query.postType == "postComment" || req.query.postType == "threadComment" ) && !req.query.commentID){
+            res.status(400).send("Request is missing post commentID");
+        }
+
         const contentType =req.query.postType;
+        const contentID = req.query.contentID;
+        let commentID =""; 
 
         if(contentType=='post'){
+
             //content ID is the unique identifier for a piece of content, it's the docID for that piece of content. The docID listed in flags, is the docID for the flags, not the content. 
             //what am I saying anyway
             const { authorId } = await firestoreService.firebaseRead(`posts/${req.query.contentID}`, next); 
 
-            newFlag = {
+            const newPostFlag = {
                 authorID : authorId,
                 contentID : req.query.contentID,
                 contentType : contentType,
             }
-
+            
             await firestoreService.firebaseCreate(`flags`, newFlag, next);
-            res.status(200);
-        }else if (contentType=='postComment'){
-            const comments = await firestoreService.firebaseReadQuery(
-                `posts/${req.query.contentID}`, 
-                [where("commentID","==", req.query.commentID)],
-                next);
-            const commentAuthorID=comments.authorID; 
+            res.status(200).send("post has been added to list of flagged content.");
 
+        }else if (contentType=='postComment'){
+
+            commentID = req.query.commentID;
+            const { comments } = await firestoreService.firebaseRead(`posts/${req.query.contentID}`, next);
+
+            if (!comments){
+                res.status(400).send('Post comment not found');
+            }else{
+            
+                const postCommentAuthorID = comments.find(c => c.commentID == req.query.commentID).authorID;
+
+                newPostCommentFlag = {
+                    authorID : postCommentAuthorID,
+                    contentID : contentID,
+                    commentID : commentID,
+                    contentType : contentType,
+                } 
+
+                await firestoreService.firebaseCreate(`flags`, newPostCommentFlag, next);
+                res.status(200).send("post comment has been added to list of flagged content.");
+
+            }
+            
         }else if (contentType=='thread'){
-            const { authorId } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next);
+
+            const { authorId } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next); 
+
+            const newThreadFlag = {
+                authorID : authorId,
+                contentID : req.query.contentID,
+                contentType : contentType,
+            }
+            
+            await firestoreService.firebaseCreate(`flags`, newThreadFlag, next);
+            res.status(200).send("post has been added to list of flagged content.");
 
         }else if (contentType=='threadComment'){
-            const comments = await firestoreService.firebaseReadQuery(
-                `threads/${req.query.contentID}}`,
-                [where("commentID","==",req.query.commentID)]
-            )
+
+            commentID = req.query.commentID;
+            const { comments } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next);
+
+            if (!comments){
+                res.status(400).send('Thread comment not found');
+            }else{
+            
+                const threadCommentAuthorID = comments.find(c => c.commentID == req.query.commentID).authorID;
+
+                newThreadCommentFlag = {
+                    authorID : threadCommentAuthorID,
+                    contentID : contentID,
+                    commentID : commentID,
+                    contentType : contentType,
+                } 
+
+                await firestoreService.firebaseCreate(`flags`, newThreadCommentFlag, next);
+                res.status(200).send("Thread comment has been added to list of flagged content.");
+
+            }
+
         }
 
         
