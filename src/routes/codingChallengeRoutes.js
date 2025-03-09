@@ -15,7 +15,9 @@ codingChallengeRouter.use('/:id', codingChallengeController.assertCodingChalleng
 
 // Route definitions
 codingChallengeRouter.get('/', codingChallengeController.getAllCodingChallengeData);
+codingChallengeRouter.post('/', codingChallengeController.createNewCodingChallenge);
 codingChallengeRouter.get('/:id', codingChallengeController.getCodingChallengeData);
+codingChallengeRouter.delete('/:id', codingChallengeController.deleteCodingChallenge);
 codingChallengeRouter.post('/:id/user-progress', codingChallengeController.updateUserChallengeProgress);
 
 
