@@ -66,3 +66,78 @@ exports.addNewThread = async (req, res, next) => {
         .status(400)
         .send(`Missing expected value in request body: thread title`);
 };
+
+exports.editRoadmapThread = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const threadID = req.params.threadID;
+
+    if (!threadID) {
+        return res.status(400).send("Thread ID is required.");
+    }
+
+    const updatedFields = {};
+    const allowedFields = [
+        "roadmapThreadTitle",
+        "roadmapThreadAuthor",
+        "roadmapProfileImageLink",
+        "roadmapBannerImageLink",
+        "roadmapDescription",
+        "roadmapSection"
+    ];
+
+    for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+            updatedFields[field] = req.body[field];
+        }
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+        return res.status(400).send("No valid fields provided for update.");
+    }
+
+    try {
+        const threadRef = `threads/${threadID}`;
+        const threadData = await firestoreService.firebaseRead(threadRef, next);
+
+        if (!threadData) {
+            return res.status(404).send("Thread not found.");
+        }
+
+        if (threadData.authorId !== currentUserID) {
+            return res.status(403).send("You are not authorized to edit this roadmap thread.");
+        }
+
+        await firestoreService.firebaseUpdate(threadRef, updatedFields, next);
+        return res.status(200).send("Roadmap thread updated successfully.");
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.deleteRoadmapThread = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const threadID = req.params.threadID;
+
+    if (!threadID) {
+        return res.status(400).send("Thread ID is required.");
+    }
+
+    try {
+        const threadRef = `threads/${threadID}`;
+        const threadData = await firestoreService.firebaseRead(threadRef, next);
+
+        if (!threadData) {
+            return res.status(404).send("Thread not found.");
+        }
+
+        if (threadData.authorId !== currentUserID) {
+            return res.status(403).send("You are not authorized to delete this roadmap thread.");
+        }
+
+        await firestoreService.firebaseDelete(threadRef, next);
+        return res.status(200).send("Roadmap thread deleted successfully.");
+    } catch (error) {
+        return next(error);
+    }
+};
+
