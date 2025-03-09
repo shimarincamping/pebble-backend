@@ -8,6 +8,7 @@ const { documentObjectArrayReduce, shuffleArray } = require('../utils/dataManipu
 const { getTimeDurationString } = require('../utils/dateTimeUtils');
 
 const { formatPostData } = require('./postController');
+const { throwError } = require('../middlewares/errorMiddleware');
 
 
 // ---------------------------------- //
@@ -83,6 +84,7 @@ exports.getUserNotifications = (req, res, next) => {
             
             return res.status(200).send(
                 notifications.map(n => ({
+                    notificationTriggeredByID : n.notificationTriggeredBy,
                     notificationTriggeredBy : users[n.notificationTriggeredBy].fullName,
                     notificationImage : users[n.notificationTriggeredBy].profilePicture,
                     notificationText : n.notificationText,
@@ -95,43 +97,49 @@ exports.getUserNotifications = (req, res, next) => {
 
 
 exports.getUserNetworkInformation = async (req, res, next) => {
+    try {
+        const userFollowers = res.locals.currentData.followers || [];
+        const userFollowing = res.locals.currentData.following || [];
+        
+        const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
+            userID: docId, 
+            shortName: fullName.split(" ")[0],
+            profilePicture  
+        });
 
-    const userFollowers = res.locals.currentData.followers;
-    const userFollowing = res.locals.currentData.following;
-    const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
-        userID : docId, 
-        shortName : fullName.split(" ")[0],
-        profilePicture  
-    });
+        const userFollowersInformation = await Promise.all(
+            userFollowers.map(follower => firestoreService.firebaseRead(`users/${follower}`, next))
+        );
+        
+        const suggestedUsersInformation = userFollowing.length 
+            ? firestoreService.firebaseReadQuery(`users`, [where("docId", "not-in", [...userFollowing, req.userID])], next) 
+            : Promise.resolve([]); // Prevent Firestore query failure
 
-    const userFollowersInformation = userFollowers.map((follower) => {
-        firestoreService.firebaseRead(`users/${follower}`, next);
-    });
+        const [resolvedUserFollowers, resolvedSuggestedUsers] = await Promise.all([
+            Promise.all(userFollowersInformation),
+            suggestedUsersInformation
+        ]);
 
-    const suggestedUsersInformation = firestoreService.firebaseReadQuery(
-        `users`,
-        [where("docId", "not-in", [...userFollowing, req.userID])],
-        next
-    );
+        shuffleArray(resolvedSuggestedUsers);
 
-    const [resolvedUserFollowers, resolvedSuggestedUsers] = await Promise.all(
-        [Promise.all(userFollowersInformation), suggestedUsersInformation]
-    );
+        return res.status(200).send({
+            followerCount: userFollowers.length,
+            myFollowers: resolvedUserFollowers.map(mapDataToRequiredFormat),
+            mySuggestedUsers: resolvedSuggestedUsers.slice(0, 20).map(mapDataToRequiredFormat)
+        });
 
-    shuffleArray(resolvedSuggestedUsers);
-
-    return res.status(200).send({
-        followerCount : userFollowers.length,
-        myFollowers : resolvedUserFollowers.map(mapDataToRequiredFormat),
-        mySuggestedUsers : resolvedSuggestedUsers.slice(0, 20).map(mapDataToRequiredFormat) // Returns maximum 20 values
-    })
-}
+    } catch (error) {
+        console.error("Error fetching user network information:", error);
+        return res.status(500).send({ error: "Failed to load network information" });
+    }
+};
 
 exports.getUserStatsInformation = async (req, res, next) => {
     return res.status(200).send({
         leaderboardRank : await firestoreService.firebaseRead(`leaderboard/points`, next)
                             .then(({rankings}) => {
-                                return rankings.findIndex(u => u.userID === req.userID) + 1
+                                const rank = rankings.findIndex(u => u.userID === req.userID) + 1;
+                                return (rank === -1) ? rankings.length + 1 : rank;
                             }),
         totalPoints : res.locals.currentData?.pointCount || 0,
         tickets : res.locals.currentData?.ticketCount || 0
@@ -180,6 +188,7 @@ exports.getUserInformation = (isFullInformation) => {
                 `posts`,
                 [
                     where("authorId", "==", req.userID),
+                    where("isContentVisible", "==", true),
                     orderBy("postCreatedAt", "desc"),
                     limit(1)
                 ],
@@ -202,7 +211,7 @@ exports.updateUserInformation = async (req, res, next) => {
     const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
     if (req.userID !== currentUserID) {
-        return res.status(403).send();  // Only allow user to modify their own profile
+        return throwError(403, `User attempted to modify another user's profile`, next);  // Only allow user to modify their own profile
     }
 
     // Extract only fields that users are allowed to modify directly
@@ -228,7 +237,7 @@ exports.toggleFollower = async (req, res, next) => {
     const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
 
     if (req.userID === currentUserID) {     
-        return res.status(403).send();      // Disallow users to toggle-follow themselves
+        return throwError(403, `User attempted to follow themselves`, next);     // Disallow users to toggle-follow themselves
     }
 
     // Update both followers (userID) and following (currentUserID)

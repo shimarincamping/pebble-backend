@@ -6,7 +6,6 @@ const generateJwtToken = (user) => {
     return jwt.sign(
         {
             uid: user.uid,
-            email: user.email,
         },
         jwtSecret,
         { expiresIn: "1h" } // Token expires in 1 hour

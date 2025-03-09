@@ -9,7 +9,7 @@ roadmapRouter.get("/", roadmapController.getRoadmapData);
 // Create new roadmap
 roadmapRouter.post("/createRoadmap", roadmapController.addNewThread);
 
-// Pre-processes all routes that contain an ID parameter
+// Pre-process all routes that contain an ID parameter
 roadmapRouter.param("id", (req, res, next, id) => {
     req.threadID = id;
     next();
@@ -18,7 +18,13 @@ roadmapRouter.param("id", (req, res, next, id) => {
 // ID must exist to perform operations that involve an ID parameter
 roadmapRouter.use("/:id", roadmapController.assertThreadExists);
 
-// Other roadmap routes
+// Get a single roadmap thread
 roadmapRouter.get("/:id", roadmapController.getSingleThreadData);
+
+// Edit a roadmap thread
+roadmapRouter.put("/:id/editRoadmap", roadmapController.editRoadmapThread);
+
+// Delete a roadmap thread
+roadmapRouter.delete("/:id/deleteRoadmap", roadmapController.deleteRoadmapThread);
 
 module.exports = roadmapRouter;

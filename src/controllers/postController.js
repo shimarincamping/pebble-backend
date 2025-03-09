@@ -8,6 +8,7 @@ const {
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
 const { capitalizeFirstLetter } = require("../utils/stringManipulationUtils");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
+const { throwError } = require("../middlewares/errorMiddleware");
 
 exports.assertPostExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`posts/${req.postID}`, res, next);
@@ -109,18 +110,52 @@ exports.addNewPost = async (req, res, next) => {
 };
 
 exports.getSinglePostData = async (req, res, next) => {
-    return res
-        .status(200)
-        .send(
-            this.formatPostData(
-                res.locals.currentData,
-                await firestoreService.firebaseRead(
-                    `users/${res.locals.currentData.authorId}`,
-                    next
-                )
+    return res.status(200).send(
+        this.formatPostData(
+            res.locals.currentData,
+            await firestoreService.firebaseRead(
+                `users/${res.locals.currentData.authorId}`,
+                next
             )
-        );
+        )
+    );
 };
+
+exports.editPost = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
+    if (!req.body?.newPostContent) {
+        return throwError(400, `Missing expected value in request body: newPostContent`, next);
+    }
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return throwError(403, `User attempted to edit post created by another user`, next);
+    }
+
+    await firestoreService.firebaseWrite(
+        `posts/${res.locals.currentData.docId}`,
+        { postDesc : req.body.newPostContent },
+        next
+    );
+
+    return res.status(200).send();
+}
+
+exports.deletePost = async (req, res, next) => {
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return throwError(403, `User attempted to delete post created by another user`, next);
+    }
+
+    await firestoreService.firebaseWrite(
+        `posts/${res.locals.currentData.docId}`, 
+        { isContentVisible : false },
+        next
+    );
+
+    return res.status(204).send();
+}
 
 exports.togglePostLike = async (req, res, next) => {
     const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
@@ -154,7 +189,7 @@ exports.togglePostLike = async (req, res, next) => {
         return res.status(200).send();
     }
 
-    return res.status(403).send();
+    return throwError(403, `User attempted to like own post`, next);
 };
 
 exports.getPostComments = async (req, res, next) => {

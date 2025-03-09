@@ -14,7 +14,14 @@ const { errorHandler } = require("./src/middlewares/errorMiddleware");
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
-    cors({ origin: process.env.FRONTEND_DOMAIN || "http://localhost:3000" })
+  cors({
+    origin: [
+      process.env.FRONTEND_DOMAIN || "http://localhost:3000", // ReactJS frontend
+      "http://10.0.2.2:4001", // Android emulator accessing ReactJS frontend
+      "http://10.0.2.2:8081", // Android emulator accessing React Native
+    ],
+    credentials: true,  
+  })
 );
 
 /*===================================================================================*/

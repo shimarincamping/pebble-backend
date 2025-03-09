@@ -2,6 +2,7 @@ const firestoreService = require('../services/firestoreService');
 const documentExistsMiddleware = require('../middlewares/documentExistsMiddleware');
 
 const { documentObjectArrayReduce, sortObjectsByNonNumericFieldValues, CODING_CHALLENGE_DIFFICULTY_ORDER } = require('../utils/dataManipulationUtils');
+const { throwError } = require('../middlewares/errorMiddleware');
 
 
 exports.assertCodingChallengeExists = (req, res, next) => {
@@ -42,10 +43,49 @@ exports.updateUserChallengeProgress = (req, res, next) => {
             `codingChallenges/${req.codingChallengeID}`,
             { "lastAnsweredQuestion" : { [`${currentUserID}`] : req.body.newProgressValue } },
             next
-        ).then((resp) => {
+        ).then(() => {
             return res.status(200).send(`Successfully updated progress for ${currentUserID} on challenge ${req.codingChallengeID} to ${req.body.newProgressValue}`);
         })
     } else {
-        return res.status(400).send(`Missing expected value in request body: newProgressValue`);
+        return throwError(400, `Missing expected value in request body: newProgressValue`, next);
     }
+}
+
+
+exports.createNewCodingChallenge = (req, res, next) => {
+    
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
+    if (req.body != null) {
+        firestoreService.firebaseCreate(`codingChallenges`, {
+            quizName : req.body.quizName || "New Quiz",
+            quizDifficulty : req.body.quizDifficulty || "Easy",
+            quizDescription : req.body.quizDescription || "Try the quiz now!",
+            lastAnsweredQuestion : {},
+            quizQuestions : req.body.quizQuestions?.map(question => ({
+                questionBody : question?.questionBody || "Pick the correct answer",
+                questionOptions : question?.questionOptions?.map(option => ({
+                    optionText : option?.optionText || "Option", 
+                    isCorrect : Boolean(option?.isCorrect)
+                })) || {}
+            })) || {}
+        }, next).then(() => {
+            return res.status(200).send();
+        })
+    } else {
+        return throwError(400, `Missing expected object in request body`, next);
+    }
+
+}
+
+exports.deleteCodingChallenge = (req, res, next) => {
+
+    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+
+    firestoreService.firebaseDelete(
+        `codingChallenges/${req.codingChallengeID}`, 
+        next
+    ).then(() => {
+        return res.status(204).send();
+    });
 }
