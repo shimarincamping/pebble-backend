@@ -38,6 +38,7 @@ const roadmapRoutes = require("./src/routes/roadmapRoutes");
 const flagRoutes = require("./src/routes/flagRoutes");
 const linkedInRoutes=require('./src/routes/linkedInRoutes');
 const sentimentAnalysisRoutes = require ('./src/routes/sentimentAnalysisRoutes');
+const cvGeneratorMiddleware = require ('./src/routes/cvRoutes');
 
 // Mount routers
 app.use("/users", userRoutes);
@@ -52,6 +53,7 @@ app.use("/auth", authRoutes);
 app.use("/flags", flagRoutes);
 app.use('/auth/linkedin', linkedInRoutes); 
 app.use('/flag',sentimentAnalysisRoutes);
+app.use('/cv',cvGeneratorMiddleware);
 
 /*===================================================================================*/
 
