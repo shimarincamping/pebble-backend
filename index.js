@@ -14,14 +14,14 @@ const { errorHandler } = require("./src/middlewares/errorMiddleware");
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
-  cors({
-    origin: [
-      process.env.FRONTEND_DOMAIN || "http://localhost:3000", // ReactJS frontend
-      "http://10.0.2.2:4001", // Android emulator accessing ReactJS frontend
-      "http://10.0.2.2:8081", // Android emulator accessing React Native
-    ],
-    credentials: true,  
-  })
+    cors({
+        origin: [
+            process.env.FRONTEND_DOMAIN || "http://localhost:3000", // ReactJS frontend
+            "http://10.0.2.2:4001", // Android emulator accessing ReactJS frontend
+            "http://10.0.2.2:8081", // Android emulator accessing React Native
+        ],
+        credentials: true,
+    })
 );
 
 /*===================================================================================*/
@@ -36,11 +36,16 @@ const leaderboardRoutes = require("./src/routes/leaderboardRoutes");
 const forumRoutes = require("./src/routes/forumRoutes");
 const roadmapRoutes = require("./src/routes/roadmapRoutes");
 const flagRoutes = require("./src/routes/flagRoutes");
-const linkedInRoutes=require('./src/routes/linkedInRoutes');
-const sentimentAnalysisRoutes = require ('./src/routes/sentimentAnalysisRoutes');
-const cvGeneratorMiddleware = require ('./src/routes/cvRoutes');
+const linkedInRoutes = require("./src/routes/linkedInRoutes");
+const sentimentAnalysisRoutes = require("./src/routes/sentimentAnalysisRoutes");
+const cvGeneratorMiddleware = require("./src/routes/cvRoutes");
+const { verifyJwtToken } = require("./src/services/jwtService");
 
 // Mount routers
+app.use("/auth", authRoutes);
+
+app.use(verifyJwtToken);
+
 app.use("/users", userRoutes);
 app.use("/posts", postRoutes);
 app.use("/coding-challenges", codingChallengeRoutes);
@@ -49,11 +54,10 @@ app.use("/rewards", rewardRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/forum", forumRoutes);
 app.use("/roadmap", roadmapRoutes);
-app.use("/auth", authRoutes);
 app.use("/flags", flagRoutes);
-app.use('/auth/linkedin', linkedInRoutes); 
-app.use('/flag',sentimentAnalysisRoutes);
-app.use('/cv',cvGeneratorMiddleware);
+app.use("/auth/linkedin", linkedInRoutes);
+app.use("/flag", sentimentAnalysisRoutes);
+app.use("/cv", cvGeneratorMiddleware);
 
 /*===================================================================================*/
 

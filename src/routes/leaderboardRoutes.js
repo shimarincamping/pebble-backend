@@ -1,12 +1,16 @@
-const express = require('express');
+const express = require("express");
 const leaderboardRouter = express.Router();
 
-const leaderboardController = require('../controllers/leaderboardController');
+const leaderboardController = require("../controllers/leaderboardController");
 
+const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
 // Route definitions
-leaderboardRouter.get("/", leaderboardController.checkLastRefresh, leaderboardController.getLeaderboardData);
-
-
+leaderboardRouter.get(
+    "/",
+    checkPermission("LEADERBOARD_GET"),
+    leaderboardController.checkLastRefresh,
+    leaderboardController.getLeaderboardData
+);
 
 module.exports = leaderboardRouter;

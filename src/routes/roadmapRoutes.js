@@ -3,11 +3,21 @@ const roadmapRouter = express.Router();
 
 const roadmapController = require("../controllers/roadmapController");
 
+const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
+
 // Get a collection of roadmaps
-roadmapRouter.get("/", roadmapController.getRoadmapData);
+roadmapRouter.get(
+    "/",
+    checkPermission("ROADMAP_GET"),
+    roadmapController.getRoadmapData
+);
 
 // Create new roadmap
-roadmapRouter.post("/createRoadmap", roadmapController.addNewThread);
+roadmapRouter.post(
+    "/createRoadmap",
+    checkPermission("ROADMAP_POST"),
+    roadmapController.addNewThread
+);
 
 // Pre-process all routes that contain an ID parameter
 roadmapRouter.param("id", (req, res, next, id) => {
@@ -19,12 +29,24 @@ roadmapRouter.param("id", (req, res, next, id) => {
 roadmapRouter.use("/:id", roadmapController.assertThreadExists);
 
 // Get a single roadmap thread
-roadmapRouter.get("/:id", roadmapController.getSingleThreadData);
+roadmapRouter.get(
+    "/:id",
+    checkPermission("ROADMAP_GET"),
+    roadmapController.getSingleThreadData
+);
 
 // Edit a roadmap thread
-roadmapRouter.put("/:id/editRoadmap", roadmapController.editRoadmapThread);
+roadmapRouter.put(
+    "/:id/editRoadmap",
+    checkPermission("ROADMAP_PUT"),
+    roadmapController.editRoadmapThread
+);
 
 // Delete a roadmap thread
-roadmapRouter.delete("/:id/deleteRoadmap", roadmapController.deleteRoadmapThread);
+roadmapRouter.delete(
+    "/:id/deleteRoadmap",
+    checkPermission("ROADMAP_DELETE"),
+    roadmapController.deleteRoadmapThread
+);
 
 module.exports = roadmapRouter;
