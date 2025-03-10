@@ -27,8 +27,8 @@ authRouter.post("/register", async (req, res, next) => {
                 fullName: req.body.fullName,
                 userType: "student", // assume student for now
                 about: "",
-                courseName: "",
-                currentYear: -1,
+                courseName: "PEBBLE user",
+                currentYear: 1,
                 discordUsername: "",
                 followers: [],
                 following: [],
@@ -43,7 +43,7 @@ authRouter.post("/register", async (req, res, next) => {
                     skills: [],
                     workExperience: [],
                 },
-                profilePicture: "",
+                profilePicture: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
                 ticketCount: 0,
             };
 
