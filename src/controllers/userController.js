@@ -101,9 +101,11 @@ exports.getUserNetworkInformation = async (req, res, next) => {
         const userFollowers = res.locals.currentData.followers || [];
         const userFollowing = res.locals.currentData.following || [];
         
-        const mapDataToRequiredFormat = ({ docId, fullName, profilePicture }) => ({ 
-            userID: docId, 
-            shortName: fullName.split(" ")[0],
+        const mapDataToRequiredFormat = ({ docId, fullName, profilePicture, courseName, currentYear }) => ({ 
+            userID : docId, 
+            shortName : fullName.split(" ")[0],
+            course : courseName || null,       
+            year : currentYear || null, 
             profilePicture  
         });
 
