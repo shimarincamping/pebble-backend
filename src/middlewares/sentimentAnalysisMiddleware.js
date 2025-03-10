@@ -180,7 +180,7 @@ const writeFlag = async (req, res, next) => {
                 contentType : contentType,
             }
             
-            await firestoreService.firebaseCreate(`flags`, newFlag, next);
+            await firestoreService.firebaseCreate(`flags`, newPostFlag, next);
             res.status(200).send("post has been added to list of flagged content.");
 
         }else if (contentType=='postComment'){
