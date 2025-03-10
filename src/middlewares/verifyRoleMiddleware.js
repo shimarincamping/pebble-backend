@@ -1,12 +1,9 @@
 const firestoreService = require("../services/firestoreService");
 const { throwError } = require("../middlewares/errorMiddleware");
+const { roles } = require("../middlewares/rolePermissions");
 
 exports.checkPermission = (permission, next) => {
     return async (req, res, next) => {
-        const roles = {
-            student: ["FEED", "FORUM"],
-            moderator: ["FEED", "FORUM", "MODERATOR_DASHBOARD"],
-        };
         res.locals.currentUserID = req.user.uid;
 
         const { userType } = await firestoreService.firebaseRead(

@@ -15,7 +15,7 @@ exports.getAllRewards = async (req, res, next) => {
 };
 
 exports.assertTicketExists = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "WRfW7QuVFmNmunEiPbkt"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    const currentUserID = res.locals.currentUserID;
 
     const { ticketCount } = await firestoreService.firebaseRead(
         `users/${currentUserID}`,
@@ -32,7 +32,7 @@ exports.assertTicketExists = async (req, res, next) => {
 };
 
 exports.addNewReward = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "WRfW7QuVFmNmunEiPbkt"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    const currentUserID = res.locals.currentUserID;
     const { ticketCount } = await firestoreService.firebaseRead(
         `users/${currentUserID}`
     );

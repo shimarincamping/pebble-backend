@@ -8,8 +8,7 @@ const flagController = require("../controllers/flagController");
 // Get a collection of flagged content
 flagRouter.get(
     "/",
-    verifyJwtToken,
-    checkPermission("MODERATOR_DASHBOARD"),
+    checkPermission("MODERATOR_DASHBOARD_GET"),
     flagController.getFlaggedData
 );
 
