@@ -3,11 +3,19 @@ const forumRouter = express.Router();
 
 const forumController = require("../controllers/forumController");
 
+const { verifyJwtToken } = require("../services/jwtService");
+const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
+
 // Get a collection of forum threads
 forumRouter.get("/", forumController.getForumData);
 
 // Create new forum thread
-forumRouter.post("/createForumThread", forumController.addNewThread);
+forumRouter.post(
+    "/createForumThread",
+    verifyJwtToken,
+    checkPermission("FORUM"),
+    forumController.addNewThread
+);
 
 // Pre-processes all routes that contain an ID parameter
 forumRouter.param("id", (req, res, next, id) => {
@@ -22,6 +30,11 @@ forumRouter.use("/:id", forumController.assertThreadExists);
 forumRouter.get("/:id", forumController.getSingleThreadData);
 forumRouter.put("/:id/likes", forumController.toggleThreadLike);
 forumRouter.get("/:id/comments", forumController.getThreadComments);
-forumRouter.post("/:id/comments", forumController.addNewComment);
+forumRouter.post(
+    "/:id/comments",
+    verifyJwtToken,
+    checkPermission("FORUM"),
+    forumController.addNewComment
+);
 
 module.exports = forumRouter;
