@@ -1,9 +1,15 @@
 const express= require('express');
 const sentimentAnalysisRouter = express.Router(); 
-const geminiService= require('../services/geminiService');
+const sentimentAnalysisMiddleware= require('../middlewares/sentimentAnalysisMiddleware');
 
 
-sentimentAnalysisRouter.get('/',geminiService.getGeneratorOutput,geminiService.getDiscriminatorOutput,geminiService.parseFlag);
+sentimentAnalysisRouter.get('/',
+    sentimentAnalysisMiddleware.getGeneratorOutput,
+    sentimentAnalysisMiddleware.getDiscriminatorOutput,
+    sentimentAnalysisMiddleware.parseFlag,
+    sentimentAnalysisMiddleware.writeFlag
+);
+sentimentAnalysisRouter.get('/',sentimentAnalysisMiddleware.getGeneratorOutput,sentimentAnalysisMiddleware.getDiscriminatorOutput,sentimentAnalysisMiddleware.parseFlag);
 
 
 module.exports = sentimentAnalysisRouter;
