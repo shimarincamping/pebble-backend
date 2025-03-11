@@ -56,4 +56,43 @@ const logoutUser = async () => {
     await signOut(auth);
 };
 
-module.exports = { registerUser, loginUser, logoutUser };
+// const bcrypt = require("bcrypt");
+
+// const hashPassword = (password) => {
+//     const saltRounds = 10;
+
+//     bcrypt.genSalt(saltRounds, (err, salt) => {
+//         if (err) {
+//             throw new Error("Salt failed");
+//         }
+
+//         const userPassword = password;
+//         bcrypt.hash(userPassword, salt, (err, hash) => {
+//             if (err) {
+//                 throw new Error("Bcrypt hashing of password failed.");
+//             }
+//             console.log(hash);
+//             return hash;
+//         });
+//     });
+// };
+
+// const verifyPassword = (storedHashedPassword, userInputPassword) => {
+//     bcrypt.compare(userInputPassword, storedHashedPassword, (err, result) => {
+//         if (err) {
+//             throw new Error("Bcrypt verifying of password failed.");
+//         }
+
+//         if (result) {
+//             console.log("passwords match! authenticated.");
+//         } else {
+//             console.log("passwords do not match.");
+//         }
+//     });
+// };
+
+module.exports = {
+    registerUser,
+    loginUser,
+    logoutUser,
+};

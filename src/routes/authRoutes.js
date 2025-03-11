@@ -6,6 +6,7 @@ const {
     logoutUser,
 } = require("../services/firebaseAuthService");
 const { verifyJwtToken } = require("../services/jwtService");
+const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
 const authRouter = express.Router();
 
@@ -26,8 +27,8 @@ authRouter.post("/register", async (req, res, next) => {
                 fullName: req.body.fullName,
                 userType: "student", // assume student for now
                 about: "",
-                courseName: "",
-                currentYear: -1,
+                courseName: "PEBBLE user",
+                currentYear: 1,
                 discordUsername: "",
                 followers: [],
                 following: [],
@@ -42,7 +43,7 @@ authRouter.post("/register", async (req, res, next) => {
                     skills: [],
                     workExperience: [],
                 },
-                profilePicture: "",
+                profilePicture: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
                 ticketCount: 0,
             };
 
@@ -64,6 +65,7 @@ authRouter.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await loginUser(email, password);
+
         res.status(200).send(result);
     } catch (error) {
         res.status(401).json({ error: "Invalid email or password" }); // 🔴 Ensure only valid users log in
@@ -73,6 +75,19 @@ authRouter.post("/login", async (req, res) => {
 // Protected Route Example (Using JWT)
 authRouter.get("/protected", verifyJwtToken, (req, res) => {
     res.json({ message: "You have access!", user: req.user });
+});
+
+authRouter.post("/userType", async (req, res, next) => {
+    const { uid } = req.body;
+    const { userType } = await firestoreService.firebaseRead(
+        `users/${uid}`,
+        next
+    );
+    res.status(200).send({ userType });
+});
+
+authRouter.get("/test", verifyJwtToken, checkPermission("FEED"), (req, res) => {
+    res.status(200).send();
 });
 
 // Verify Token Route
@@ -89,5 +104,20 @@ authRouter.post("/logout", async (req, res) => {
         res.status(500).json({ error: "Logout failed." });
     }
 });
+
+// authRouter.post("/hash", async (req, res) => {
+//     const { password } = req.body;
+//     const hash = hashPassword(password);
+//     res.status(200).send();
+// });
+
+// authRouter.post("/verifyHash", async (req, res) => {
+//     const { password } = req.body;
+//     verifyPassword(
+//         "$2b$10$3TSfPajJnzGIfVynJgvp8OM5dqPaFKLZ0ss/w8uZNTbCRLDoVUh66",
+//         password
+//     );
+//     res.status(200).send();
+// });
 
 module.exports = authRouter;

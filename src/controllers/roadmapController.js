@@ -34,9 +34,8 @@ exports.getRoadmapData = async (req, res, next) => {
 };
 
 exports.getSingleThreadData = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
 
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
-    
     // Increment goal related to reading career roadmap
     updateGoalProgress("ke07miaMSI6icNq48sWB", currentUserID, next);
 
@@ -44,7 +43,7 @@ exports.getSingleThreadData = async (req, res, next) => {
 };
 
 exports.addNewThread = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const currentUserID = res.locals.currentUserID;
 
     if (req.body.roadmapThreadTitle) {
         const newThread = {
@@ -68,7 +67,7 @@ exports.addNewThread = async (req, res, next) => {
 };
 
 exports.editRoadmapThread = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const currentUserID = res.locals.currentUserID;
     const threadID = req.params.threadID;
 
     if (!threadID) {
@@ -82,7 +81,7 @@ exports.editRoadmapThread = async (req, res, next) => {
         "roadmapProfileImageLink",
         "roadmapBannerImageLink",
         "roadmapDescription",
-        "roadmapSection"
+        "roadmapSection",
     ];
 
     for (const field of allowedFields) {
@@ -104,7 +103,9 @@ exports.editRoadmapThread = async (req, res, next) => {
         }
 
         if (threadData.authorId !== currentUserID) {
-            return res.status(403).send("You are not authorized to edit this roadmap thread.");
+            return res
+                .status(403)
+                .send("You are not authorized to edit this roadmap thread.");
         }
 
         await firestoreService.firebaseUpdate(threadRef, updatedFields, next);
@@ -115,7 +116,7 @@ exports.editRoadmapThread = async (req, res, next) => {
 };
 
 exports.deleteRoadmapThread = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const currentUserID = res.locals.currentUserID;
     const threadID = req.params.threadID;
 
     if (!threadID) {
@@ -131,7 +132,9 @@ exports.deleteRoadmapThread = async (req, res, next) => {
         }
 
         if (threadData.authorId !== currentUserID) {
-            return res.status(403).send("You are not authorized to delete this roadmap thread.");
+            return res
+                .status(403)
+                .send("You are not authorized to delete this roadmap thread.");
         }
 
         await firestoreService.firebaseDelete(threadRef, next);
@@ -140,4 +143,3 @@ exports.deleteRoadmapThread = async (req, res, next) => {
         return next(error);
     }
 };
-

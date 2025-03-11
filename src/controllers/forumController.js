@@ -36,7 +36,7 @@ exports.formatForumData = (forumData, forumUserData) => {
 };
 
 exports.getForumData = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    const currentUserID = res.locals.currentUserID;
 
     const forumData = (
         await firestoreService.firebaseReadQuery(
@@ -85,7 +85,7 @@ exports.getSingleThreadData = async (req, res, next) => {
 };
 
 exports.toggleThreadLike = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B"; // This assumes auth. middleware will set an ID globally for all requests // (for now defaults to Anoop)
+    const currentUserID = res.locals.currentUserID;
     const currentThreadLikes = res.locals.currentData.likes;
 
     if (res.locals.currentData.authorId !== currentUserID) {
@@ -146,7 +146,7 @@ exports.getThreadComments = async (req, res, next) => {
 };
 
 exports.addNewComment = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const currentUserID = res.locals.currentUserID;
 
     if (req.body.commentDetails) {
         const currentThreadComments = res.locals.currentData.comments;
@@ -187,7 +187,7 @@ exports.addNewComment = async (req, res, next) => {
 };
 
 exports.addNewThread = async (req, res, next) => {
-    const currentUserID = req.currentUserID || "3oMAV7h8tmHVMR8Vpv9B";
+    const currentUserID = res.locals.currentUserID;
 
     if (req.body.threadTitle && req.body.threadDescription) {
         const newThread = {

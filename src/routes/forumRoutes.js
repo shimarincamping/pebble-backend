@@ -3,11 +3,21 @@ const forumRouter = express.Router();
 
 const forumController = require("../controllers/forumController");
 
+const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
+
 // Get a collection of forum threads
-forumRouter.get("/", forumController.getForumData);
+forumRouter.get(
+    "/",
+    checkPermission("FORUM_THREAD_GET"),
+    forumController.getForumData
+);
 
 // Create new forum thread
-forumRouter.post("/createForumThread", forumController.addNewThread);
+forumRouter.post(
+    "/createForumThread",
+    checkPermission("FORUM_THREAD_POST"),
+    forumController.addNewThread
+);
 
 // Pre-processes all routes that contain an ID parameter
 forumRouter.param("id", (req, res, next, id) => {
@@ -19,9 +29,25 @@ forumRouter.param("id", (req, res, next, id) => {
 forumRouter.use("/:id", forumController.assertThreadExists);
 
 // Other forum thread routes
-forumRouter.get("/:id", forumController.getSingleThreadData);
-forumRouter.put("/:id/likes", forumController.toggleThreadLike);
-forumRouter.get("/:id/comments", forumController.getThreadComments);
-forumRouter.post("/:id/comments", forumController.addNewComment);
+forumRouter.get(
+    "/:id",
+    checkPermission("FORUM_THREAD_GET"),
+    forumController.getSingleThreadData
+);
+forumRouter.put(
+    "/:id/likes",
+    checkPermission("FORUM_THREAD_LIKE"),
+    forumController.toggleThreadLike
+);
+forumRouter.get(
+    "/:id/comments",
+    checkPermission("FORUM_THREAD_GET"),
+    forumController.getThreadComments
+);
+forumRouter.post(
+    "/:id/comments",
+    checkPermission("FORUM_THREAD_POST"),
+    forumController.addNewComment
+);
 
 module.exports = forumRouter;
