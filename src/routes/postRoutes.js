@@ -2,6 +2,7 @@ const express = require("express");
 const postRouter = express.Router();
 
 const postController = require("../controllers/postController");
+const sentimentAnalysisMiddleware = require("../middlewares/sentimentAnalysisMiddleware"); 
 
 // Get a collection of posts
 postRouter.get("/", postController.getPostsData);
@@ -26,4 +27,13 @@ postRouter.put("/:id/likes", postController.togglePostLike);
 postRouter.get("/:id/comments", postController.getPostComments);
 postRouter.post("/:id/comments", postController.addNewComment);
 
+// for sentiment analysis, carrys out sa and writes posts that are deemed to be offensive into firebase.
+// the middlewares here do not hide the post yet.
+postRouter.post("/:id/flags", sentimentAnalysisMiddleware.getGeneratorOutput,
+                              sentimentAnalysisMiddleware.getDiscriminatorOutput,
+                              sentimentAnalysisMiddleware.parseFlag,
+                              sentimentAnalysisMiddleware.writeFlag                        
+);
+
 module.exports = postRouter;
+ 
