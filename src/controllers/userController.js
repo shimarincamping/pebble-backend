@@ -166,12 +166,14 @@ exports.getUserNetworkInformation = async (req, res, next) => {
 };
 
 exports.getUserStatsInformation = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
     return res.status(200).send({
         leaderboardRank: await firestoreService
             .firebaseRead(`leaderboard/points`, next)
             .then(({ rankings }) => {
                 const rank =
-                    rankings.findIndex((u) => u.userID === req.userID) + 1;
+                    rankings.findIndex((u) => u.userID === currentUserID) + 1;
                 return rank === -1 ? rankings.length + 1 : rank;
             }),
         totalPoints: res.locals.currentData?.pointCount || 0,
