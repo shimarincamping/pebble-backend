@@ -13,17 +13,13 @@ goalRouter.param("id", (req, res, next, id) => {
 });
 
 // ID must exist to perform operations that involve an ID parameter
-goalRouter.use(
-    "/:id",
-    goalController.assertGoalExists
-);
+goalRouter.use("/:id", goalController.assertGoalExists);
 
 
 // Route definitions
-goalRouter.get(
-    "/",
-    checkPermission("GOAL_GET"),
-    goalController.checkLastRefresh,
+goalRouter.get("/", 
+    checkPermission("GOAL_GET"), 
+    goalController.checkLastRefresh, 
     goalController.getGoalData
 );
 
