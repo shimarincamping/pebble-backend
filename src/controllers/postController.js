@@ -18,7 +18,7 @@ exports.formatPostData = (postData, authorUserData) => {
     } // Reject request for post that is invisible
 
     return {
-        id: postData.docId,
+        postID: postData.docId,
         fullName: authorUserData.fullName,
         profilePicture: authorUserData.profilePicture,
         courseName:
@@ -177,7 +177,7 @@ exports.getPostComments = async (req, res, next) => {
     ).map(async (c) => {
         const { fullName, profilePicture } = await firestoreService.firebaseRead(`users/${c.authorID}`, next);
         return {
-            id: c.commentID,
+            commentID: c.commentID,
             authorID: c.authorID,
             author: fullName,
             profilePic: profilePicture,
