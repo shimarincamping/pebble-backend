@@ -3,6 +3,7 @@ const documentExistsMiddleware = require("../middlewares/documentExistsMiddlewar
 
 const { where, orderBy, limit } = require("firebase/firestore");
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
+const { throwError } = require("../middlewares/errorMiddleware");
 
 exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
@@ -21,8 +22,7 @@ exports.formatRoadmapData = (roadmapData) => {
 
 exports.getRoadmapData = async (req, res, next) => {
     const roadmapData = await firestoreService.firebaseReadQuery(
-        `threads`,
-        [
+        `threads`, [
             where("threadType", "==", "roadmap"),
             orderBy("roadmapCreatedAt", "desc"),
             req.query.limit && limit(req.query.limit),
@@ -61,17 +61,18 @@ exports.addNewThread = async (req, res, next) => {
         await firestoreService.firebaseCreate(`threads`, newThread, next);
         return res.status(200).send();
     }
-    return res
-        .status(400)
-        .send(`Missing expected value in request body: thread title`);
+    return throwError(400, `Missing expected value in request body: thread title`, next);
 };
 
+// TODO: res.locals.currentData already stores this information
+    // and whether the document exists or not is already checked by documentExistsMiddleware
+    // Refactor?
 exports.editRoadmapThread = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
     const threadID = req.params.threadID;
 
     if (!threadID) {
-        return res.status(400).send("Thread ID is required.");
+        return throwError(400, `Thread ID is required.`, next);
     }
 
     const updatedFields = {};
@@ -91,7 +92,7 @@ exports.editRoadmapThread = async (req, res, next) => {
     }
 
     if (Object.keys(updatedFields).length === 0) {
-        return res.status(400).send("No valid fields provided for update.");
+        return throwError(400, `No valid fields provided for update.`, next);
     }
 
     try {
@@ -99,13 +100,11 @@ exports.editRoadmapThread = async (req, res, next) => {
         const threadData = await firestoreService.firebaseRead(threadRef, next);
 
         if (!threadData) {
-            return res.status(404).send("Thread not found.");
+            return throwError(404, `Thread not found.`, next);
         }
 
         if (threadData.authorId !== currentUserID) {
-            return res
-                .status(403)
-                .send("You are not authorized to edit this roadmap thread.");
+            return throwError(403, `You are not authorized to edit this roadmap thread.`, next);
         }
 
         await firestoreService.firebaseUpdate(threadRef, updatedFields, next);
@@ -115,12 +114,16 @@ exports.editRoadmapThread = async (req, res, next) => {
     }
 };
 
+
+// TODO: res.locals.currentData already stores this information
+    // and whether the document exists or not is already checked by documentExistsMiddleware
+    // Refactor?
 exports.deleteRoadmapThread = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
     const threadID = req.params.threadID;
 
     if (!threadID) {
-        return res.status(400).send("Thread ID is required.");
+        return throwError(400, `Thread ID is required.`, next);
     }
 
     try {
@@ -128,13 +131,11 @@ exports.deleteRoadmapThread = async (req, res, next) => {
         const threadData = await firestoreService.firebaseRead(threadRef, next);
 
         if (!threadData) {
-            return res.status(404).send("Thread not found.");
+            return throwError(404, `Thread not found.`, next);
         }
 
         if (threadData.authorId !== currentUserID) {
-            return res
-                .status(403)
-                .send("You are not authorized to delete this roadmap thread.");
+            return throwError(403, `You are not authorized to delete this roadmap thread.`, next);
         }
 
         await firestoreService.firebaseDelete(threadRef, next);

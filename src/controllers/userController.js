@@ -55,10 +55,15 @@ exports.deleteUser = (req, res, next) => {
 exports.registerNewUser = (req, res, next) => {
     // TODO: Integrate this to use Firebase Auth UID as key
     firestoreService.firebaseCreate(`users`, req.body, next).then((resp) => {
-        return res.status(201).send(`The user ID ${
-            resp.id
-        } was successfully registered at email ${req.body.email}.
-                Firebase sent the following response: ${JSON.stringify(resp)}`);
+        return res
+            .status(201)
+            .send(
+                `The user ID ${resp.id} was successfully registered at email ${
+                    req.body.email
+                }. Firebase sent the following response: ${JSON.stringify(
+                    resp
+                )}`
+            );
     });
 };
 
@@ -158,10 +163,7 @@ exports.getUserNetworkInformation = async (req, res, next) => {
                 .map(mapDataToRequiredFormat),
         });
     } catch (error) {
-        console.error("Error fetching user network information:", error);
-        return res
-            .status(500)
-            .send({ error: "Failed to load network information" });
+        throwError(500, `Failed to fetch network information`, next);
     }
 };
 
@@ -176,6 +178,7 @@ exports.getUserStatsInformation = async (req, res, next) => {
                     rankings.findIndex((u) => u.userID === currentUserID) + 1;
                 return rank === -1 ? rankings.length + 1 : rank;
             }),
+
         totalPoints: res.locals.currentData?.pointCount || 0,
         tickets: res.locals.currentData?.ticketCount || 0,
     });

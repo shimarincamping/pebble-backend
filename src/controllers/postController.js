@@ -2,9 +2,7 @@ const firestoreService = require("../services/firestoreService");
 const documentExistsMiddleware = require("../middlewares/documentExistsMiddleware");
 
 const { where, orderBy, limit } = require("firebase/firestore");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
+const { generateNotification } = require("../middlewares/notificationsMiddleware");
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
 const { capitalizeFirstLetter } = require("../utils/stringManipulationUtils");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
@@ -20,7 +18,7 @@ exports.formatPostData = (postData, authorUserData) => {
     } // Reject request for post that is invisible
 
     return {
-        id: postData.docId,
+        postID: postData.docId,
         fullName: authorUserData.fullName,
         profilePicture: authorUserData.profilePicture,
         courseName:
@@ -35,13 +33,12 @@ exports.formatPostData = (postData, authorUserData) => {
         // TODO: Add LinkedIn URL here
         postPicture: postData?.postPicture || null,
         title: postData.title,
-        date: new Date(postData.postCreatedAt)
-            .toLocaleString("default", {
+        date: new Date(postData.postCreatedAt).toLocaleString(
+            "default", {
                 year: "numeric",
                 month: "long",
-                day: "numeric",
-            })
-            .toUpperCase(),
+                day: "numeric"
+            }).toUpperCase(),
         postDesc: postData.postDesc,
         liked: postData.likes.includes(authorUserData.docId),
     };
@@ -53,26 +50,19 @@ exports.getPostsData = async (req, res, next) => {
     // Get all posts with reference to query params
     const postsData = (
         await firestoreService.firebaseReadQuery(
-            `posts`,
-            [
-                req.query.authorID
-                    ? where("authorId", "==", req.query.authorID)
-                    : where("authorId", "!=", currentUserID), // If authorID is not specified, assume FEED and do not return own posts
+            `posts`, [
+                (req.query.authorID) ? where("authorId", "==", req.query.authorID) : where("authorId", "!=", currentUserID), // If authorID is not specified, assume FEED and do not return own posts
                 // TODO: Add more queryParams here to integrate the pagination
                 orderBy("postCreatedAt", "desc"),
-                req.query.limit && limit(req.query.limit),
-            ].filter(Boolean),
-            next
+                req.query.limit && limit(req.query.limit)
+            ].filter(Boolean), next
         )
     ).filter((p) => p.isContentVisible); // Avoid fetching data for invisible posts
 
     // For each post, fetch data about its author and restructure data
     const modifiedPostsData = await Promise.all(
         postsData.map(async (p) => {
-            return this.formatPostData(
-                p,
-                await firestoreService.firebaseRead(`users/${p.authorId}`, next)
-            );
+            return this.formatPostData(p, await firestoreService.firebaseRead(`users/${p.authorId}`, next));
         })
     );
 
@@ -88,11 +78,11 @@ exports.addNewPost = async (req, res, next) => {
             comments: [],
             isContentVisible: true,
             likes: [],
-            linkedinURL: req.body.linkedinURL,
+            linkedinURL: req.body.linkedinURL || "",
             postCreatedAt: new Date().toISOString(),
-            postDesc: req.body.postDesc,
-            postPicture: req.body.postPicture,
-            title: req.body.title,
+            postDesc: req.body.postDesc || "",
+            postPicture: req.body.postPicture || null,
+            title: req.body.title | "",
         };
 
         await firestoreService.firebaseCreate(`posts`, newPost, next);
@@ -102,44 +92,30 @@ exports.addNewPost = async (req, res, next) => {
 
         return res.status(200).send();
     }
-    return res
-        .status(400)
-        .send(
-            `Missing expected value in request body: post title and/or description`
-        );
+
+    return throwError(400, `Missing expected value in request body: post title and/or description`, next);
 };
 
 exports.getSinglePostData = async (req, res, next) => {
-    return res
-        .status(200)
-        .send(
-            this.formatPostData(
-                res.locals.currentData,
-                await firestoreService.firebaseRead(
-                    `users/${res.locals.currentData.authorId}`,
-                    next
-                )
+    return res.status(200).send(
+        this.formatPostData(res.locals.currentData,
+            await firestoreService.firebaseRead(
+                `users/${res.locals.currentData.authorId}`,
+                next
             )
-        );
+        )
+    );
 };
 
 exports.editPost = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
     if (!req.body?.newPostContent) {
-        return throwError(
-            400,
-            `Missing expected value in request body: newPostContent`,
-            next
-        );
+        return throwError(400, `Missing expected value in request body: newPostContent`, next);
     }
 
     if (res.locals.currentData.authorId !== currentUserID) {
-        return throwError(
-            403,
-            `User attempted to edit post created by another user`,
-            next
-        );
+        return throwError(403, `User attempted to edit post created by another user`, next);
     }
 
     await firestoreService.firebaseWrite(
@@ -155,11 +131,7 @@ exports.deletePost = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
     if (res.locals.currentData.authorId !== currentUserID) {
-        return throwError(
-            403,
-            `User attempted to delete post created by another user`,
-            next
-        );
+        return throwError(403, `User attempted to delete post created by another user`, next);
     }
 
     await firestoreService.firebaseWrite(
@@ -178,22 +150,15 @@ exports.togglePostLike = async (req, res, next) => {
     if (res.locals.currentData.authorId !== currentUserID) {
         // User cannot like their own post
         await firestoreService.firebaseWrite(
-            `posts/${req.postID}`,
-            {
+            `posts/${req.postID}`, {
                 likes: currentPostLikes.includes(currentUserID)
                     ? currentPostLikes.filter((user) => user !== currentUserID)
                     : [...currentPostLikes, currentUserID],
-            },
-            next
+            }, next
         );
 
         // Generate a notification to the relevant user
-        generateNotification(
-            res.locals.currentData.authorId,
-            currentUserID,
-            "liked your post",
-            next
-        );
+        generateNotification(res.locals.currentData.authorId, currentUserID, "liked your post", next);
 
         // Increment goal relating to liking posts  (does not track if posts are unique)
         if (!currentPostLikes.includes(currentUserID)) {
@@ -207,24 +172,19 @@ exports.togglePostLike = async (req, res, next) => {
 };
 
 exports.getPostComments = async (req, res, next) => {
-    const currentPostComments = res.locals.currentData.comments
-        .filter((c) => c.isContentVisible)
-        .map(async (c) => {
-            const { fullName, profilePicture } =
-                await firestoreService.firebaseRead(
-                    `users/${c.authorID}`,
-                    next
-                );
-
-            return {
-                id: c.commentID,
-                authorID: c.authorID,
-                author: fullName,
-                profilePic: profilePicture,
-                text: c.text,
-                time: getTimeDurationString(new Date(), new Date(c.time)),
-            };
-        });
+    const currentPostComments = res.locals.currentData.comments.filter(
+        (c) => c.isContentVisible
+    ).map(async (c) => {
+        const { fullName, profilePicture } = await firestoreService.firebaseRead(`users/${c.authorID}`, next);
+        return {
+            commentID: c.commentID,
+            authorID: c.authorID,
+            author: fullName,
+            profilePic: profilePicture,
+            text: c.text,
+            time: getTimeDurationString(new Date(), new Date(c.time)),
+        };
+    });
 
     const resolvedPostComments = await Promise.all(currentPostComments);
     res.status(200).send(resolvedPostComments);
@@ -252,12 +212,7 @@ exports.addNewComment = async (req, res, next) => {
 
         // Generate a notification to the relevant user (unless it is their own post)
         if (res.locals.currentData.authorId !== currentUserID) {
-            generateNotification(
-                res.locals.currentData.authorId,
-                currentUserID,
-                "commented on your post",
-                next
-            );
+            generateNotification(res.locals.currentData.authorId, currentUserID, "commented on your post", next);
         }
 
         // Increment goals relating to commenting on posts
@@ -267,9 +222,5 @@ exports.addNewComment = async (req, res, next) => {
         return res.status(200).send();
     }
 
-    return res
-        .status(400)
-        .send(
-            `Missing expected value in request body: text (comment body may be empty)`
-        );
+    return throwError(400, `Missing expected value in request body: text (comment body may be empty)`, next);
 };

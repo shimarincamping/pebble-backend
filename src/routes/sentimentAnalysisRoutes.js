@@ -9,7 +9,7 @@ sentimentAnalysisRouter.get('/',
     sentimentAnalysisMiddleware.parseFlag,
     sentimentAnalysisMiddleware.writeFlag
 );
-sentimentAnalysisRouter.get('/',sentimentAnalysisMiddleware.getGeneratorOutput,sentimentAnalysisMiddleware.getDiscriminatorOutput,sentimentAnalysisMiddleware.parseFlag);
+
 
 
 module.exports = sentimentAnalysisRouter;

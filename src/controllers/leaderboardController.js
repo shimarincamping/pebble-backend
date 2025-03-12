@@ -41,7 +41,6 @@ const refreshLeaderboard = async (next) => {
     );
 
     await firestoreService.firebaseWrite(`global/leaderboard`, { lastRefresh : new Date().toISOString() });
-
     next();
 }
 
