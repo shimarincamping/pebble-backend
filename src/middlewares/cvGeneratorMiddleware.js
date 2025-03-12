@@ -47,6 +47,10 @@ Degree Name, Major, University Name, Location, Graduation Date.
 Include relevant coursework or GPA
 List certifications and licenses.
 
+Projects: 
+Titles of projects completed, year, summary of team and summary of accomplishments.
+Use the most relevant information from the user posts provided to you.
+
 
 This is an example output for a generic software engineering intern role:
 
@@ -121,63 +125,63 @@ The CV should be formatted in a JSON and nothing else. Include the following ele
 
 //required queries: currentUserID & jobDesc
 const generateCV = async (req, res, next) => {
-  try{
+    try{
+      const currentUserID = req.params.id;
+      const { about, courseName, currentYear, email, fullName, phoneNumber, profileDetails } = await firestoreService.firebaseRead(`users/${currentUserID}`, next);
+
+      //stringify profile details
+      switch (profileDetails){
+        case profileDetails.coursesAndCertifications:
+          coursesAndCertifications = JSON.stringify(profileDetails.coursesAndCertifications);
+
+        case profileDetails.skills:
+          skills = JSON.stringify(profileDetails.skills);
+
+        case profileDetails.workExperience:
+          workExperience = JSON.stringify(profileDetails(workExperience));
+      }
+
+      // coursesAndCertifications = JSON.stringify(profileDetails(coursesAndCertifications));
+      // skills = JSON.stringify(profileDetails(skills));
+      // workExperience = JSON.stringify(profileDetails(workExperience));
+
+      console.log(`\ncurrentUserID@generateCV: ${currentUserID}\n`)
+      const posts = JSON.stringify(
+        await firestoreService.firebaseReadQuery(
+        `posts`,
+        [where("authorId","==", currentUserID),], 
+        next
+      )); 
+
+      console.log(`posts@generateCV: ${posts}`);
     
-    const { about, courseName, currentYear, email, fullName, phoneNumber, profileDetails } = await firestoreService.firebaseRead(`users/${req.query.currentUserID}`, next);
-    //stringify profile details
-    
-    switch (profileDetails){
-      case profileDetails.coursesAndCertifications:
-        coursesAndCertifications = JSON.stringify(profileDetails.coursesAndCertifications);
-      case profileDetails(skills):
-        skills = JSON.stringify(profileDetails(skills));
-      case (profileDetails(workExperience)):
-        workExperience = JSON.stringify(profileDetails(workExperience));
-    }
-
-    if (profileDetails.coursesAndCertifications){
-      const coursesAndCertifications = JSON.stringify.profileDetails.coursesAndCertifications;
-    }
-
-    if (profileDetails.skills){
-      const skills = JSON.stringify(profileDetails.skills);
-
-    }if (profileDetails.workExperience){
-      const workExperience = JSON.stringify(profileDetails.workExperience);
-    }
-
-    // coursesAndCertifications = JSON.stringify(profileDetails(coursesAndCertifications));
-    // skills = JSON.stringify(profileDetails(skills));
-    // workExperience = JSON.stringify(profileDetails(workExperience));
-
-    console.log(`\nreq.query.currentUserID@generateCV: ${req.query.currentUserID}\n`)
-    const posts = JSON.stringify(
-      await firestoreService.firebaseReadQuery(
-      `posts`,
-      [where("authorID","==", req.query.currentUserID),], 
-      next
-    )); 
-   
-    console.log(`profileDetails@generateCv: ${JSON.stringify(profileDetails.workExperience)}`);
-    // console.log(`fullName@generateCv: ${fullName}`);
-    // console.log(`about@generateCv: ${about}`);
-    // console.log(`posts@generateCv: ${posts}`);
+      console.log(`profileDetails@generateCv: ${JSON.stringify(profileDetails.workExperience)}`);
+      // console.log(`fullName@generateCv: ${fullName}`);
+      // console.log(`about@generateCv: ${about}`);
+      // console.log(`posts@generateCv: ${posts}`);
 
 
-    //put this back below after profileDetails-> ${coursesAndCertifications},${skils},${workExperience}
-    const prompt= `${role} ${instructions} ${formattingInstructions}
-                  job desc: ${req.query.jobDesc}
-                  profile information: about->${about}, courseName --> ${courseName}, current year -> ${currentYear}, email-> ${ email}, fullName->${fullName}, 
-                  contact no->${phoneNumber}, profileDetails->
-                  post information: ${posts}
-              `;
-    const geminiOutput = await geminiService.gemini15Flash.generateContent(prompt);
-    
-    //remove gemini headers
-    CV = geminiOutput.response.text().replace(/^```json\s*|```$/g, '');
+      //put this back below after profileDetails-> ${coursesAndCertifications},${skils},${workExperience}
+      const prompt= `${role} ${instructions} ${formattingInstructions}
+                    job desc: ${req.body.jobDesc}
+                    profile information: about->${about}, courseName --> ${courseName}, current year -> ${currentYear}, email-> ${ email}, fullName->${fullName}, 
+                    contact no->${phoneNumber}, profileDetails->
+                    post information: ${posts}
+                `;
+      const geminiOutput = await geminiService.gemini15Flash.generateContent(prompt);
+      
+      //remove gemini headers
+      CV = geminiOutput.response.text().replace(/^```json\s*|```$/g, '');
 
-    console.log(`CV.response.text()@generateCV: ${CV} `)
-    res.status(200).send(CV);
+      console.log(`CV.response.text()@generateCV: ${CV} `)
+
+      await firestoreService.firebaseWrite(
+                  `users/${currentUserID}`,
+                  { lastestCV: CV },
+                  next
+              );
+
+      res.status(200).send(CV);
  
   }catch(e){
     console.error(e);
