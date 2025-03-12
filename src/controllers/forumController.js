@@ -210,3 +210,5 @@ exports.addNewThread = async (req, res, next) => {
             `Missing expected value in request body: thread title and/or description`
         );
 };
+
+// TODO: Edit/delete comment?

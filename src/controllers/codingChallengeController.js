@@ -5,16 +5,13 @@ const { documentObjectArrayReduce, sortObjectsByNonNumericFieldValues, CODING_CH
 const { throwError } = require("../middlewares/errorMiddleware");
 
 exports.assertCodingChallengeExists = (req, res, next) => {
-    documentExistsMiddleware.assertExists(
-        `codingChallenges/${req.codingChallengeID}`, res, next
-    );
+    documentExistsMiddleware.assertExists(`codingChallenges/${req.codingChallengeID}`, res, next);
 };
 
 exports.getAllCodingChallengeData = (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
-    firestoreService
-        .firebaseReadAll(`codingChallenges`, next)
+    firestoreService.firebaseReadAll(`codingChallenges`, next)
         .then((codingChallengesData) => {
             return res.status(200).send(
                 documentObjectArrayReduce(sortObjectsByNonNumericFieldValues(
@@ -39,17 +36,15 @@ exports.updateUserChallengeProgress = (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
     if (req.body?.newProgressValue != null) {
-        firestoreService
-            .firebaseWrite(
-                `codingChallenges/${req.codingChallengeID}`, {
-                    lastAnsweredQuestion: { [`${currentUserID}`]: req.body.newProgressValue }
-                }, next
-            )
-            .then(() => {
-                return res.status(200).send(
-                    `Successfully updated progress for ${currentUserID} on challenge ${req.codingChallengeID} to ${req.body.newProgressValue}`
-                );
-            });
+        firestoreService.firebaseWrite(
+            `codingChallenges/${req.codingChallengeID}`, {
+                lastAnsweredQuestion: { [`${currentUserID}`]: req.body.newProgressValue }
+            }, next
+        ).then(() => {
+            return res.status(200).send(
+                `Successfully updated progress for ${currentUserID} on challenge ${req.codingChallengeID} to ${req.body.newProgressValue}`
+            );
+        });
     } else {
         return throwError(400, `Missing expected value in request body: newProgressValue`, next);
     }

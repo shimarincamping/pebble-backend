@@ -1,44 +1,34 @@
 const nodemailer = require("nodemailer");
 const firestoreService = require("../services/firestoreService");
 const { where } = require("firebase/firestore");
-const {
-    addPointsTicketsToUser,
-    updateGoalProgress,
-} = require("../middlewares/goalsRewardsMiddleware");
+const { addPointsTicketsToUser, updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
 const { getIntegerFromString } = require("../utils/dataManipulationUtils");
+const { throwError } = require("../middlewares/errorMiddleware");
+
+
 exports.getAllRewards = async (req, res, next) => {
-    const allRewardsData = await firestoreService.firebaseReadAll(
-        `rewards`,
-        next
-    );
+    const allRewardsData = await firestoreService.firebaseReadAll(`rewards`, next);
     return res.status(200).send(allRewardsData.map((r) => r.rewardName));
 };
 
 exports.assertTicketExists = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
-    const { ticketCount } = await firestoreService.firebaseRead(
-        `users/${currentUserID}`,
-        next
-    );
+    const { ticketCount } = await firestoreService.firebaseRead(`users/${currentUserID}`, next);
 
     if (ticketCount >= 1) {
         return next();
-    } else {
-        res.status(404).send(
-            `Ticket count is not enough, currently: ${ticketCount}`
-        );
-    }
+    } 
+        
+    return throwError(403, `Ticket count is not enough, currently: ${ticketCount}`, next);
 };
 
 exports.addNewReward = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
-    const { ticketCount } = await firestoreService.firebaseRead(
-        `users/${currentUserID}`
-    );
+    const { ticketCount } = await firestoreService.firebaseRead(`users/${currentUserID}`);
+
     const newTicketCount = ticketCount - 1;
     const rewardName = req.body.rewardName;
-
     const pointNumber = +getIntegerFromString(rewardName);
 
     if (pointNumber) {
