@@ -156,8 +156,12 @@ const writeFlag = async (req, res, next) => {
     try{
 
         //handle requests that don't include complete information
-        if (!req.body.postType || !req.body.contentID){
-            res.status(400).send("Request is missing postType or ContentID");
+        if (!req.body.postType){
+            res.status(400).send("Request is missing postType");
+        }
+
+        if (!req.params.id){
+            res.status(400).send("Request is missing ContentID");
         }
 
         if ((req.body.postType == "postComment" || req.body.postType == "threadComment" ) && !req.body.commentID){

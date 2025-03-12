@@ -64,7 +64,7 @@ exports.firebaseRead = async (path, next) => {
 exports.firebaseReadAll = async (path, next) => {
     try {
         const resp = await getDocs(collection(db, ...path.split("/")));
-        return resp.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
+        return resp.docs.map((doc) => ({ docId: doc.id, ...doc.data() })); 
     } catch (err) {
         return throwError(500, err, next);
     }
