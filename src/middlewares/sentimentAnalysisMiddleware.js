@@ -93,19 +93,19 @@ const discriminatorFormatInstuctions= `Your output should be in the form of a JS
                                         3. flagExplanation: Breakdown your thought process for why the content should be flagged. 
                                         `;
 
-//requires 'text', 'contentID', 'postType','commentID' as queries. 
+//requires 'text', 'contentID', 'postType','commentID' in the body. 
 // ContentID is the docID of the selected content. 
 const getGeneratorOutput = async (req ,res, next) => {
     try{
 
-        console.log("req.query.text@:getGeneratorOutput ",req.query.text);
+        console.log("req.body.text@:getGeneratorOutput ",req.body.text);
 
-        if (!req.query.text) {
-            return res.status(400).json({ error: "Missing 'text' query parameter" });
+        if (!req.body.text) {
+            return res.status(400).json({ error: "Missing 'text' body parameter" });
         }
 
         const prompt = `${generatorRole} + ${generatorTaskExplanation} + ${generatorFormatInstuctions} 
-        + analyse this based on instructions given : ${req.query.text} `;
+        + analyse this based on instructions given : ${req.body.text} `;
         
         const geminiOutput = await geminiService.gemini15Flash.generateContent(prompt);
         console.log("result@getGeneratorOutput: ", geminiOutput.response.text());
@@ -156,43 +156,47 @@ const writeFlag = async (req, res, next) => {
     try{
 
         //handle requests that don't include complete information
-        if (!req.query.postType || !req.query.contentID){
-            res.status(400).send("Request is missing postType or ContentID");
+        if (!req.body.postType){
+            res.status(400).send("Request is missing postType");
         }
 
-        if ((req.query.postType == "postComment" || req.query.postType == "threadComment" ) && !req.query.commentID){
+        if (!req.params.id){
+            res.status(400).send("Request is missing ContentID");
+        }
+
+        if ((req.body.postType == "postComment" || req.body.postType == "threadComment" ) && !req.body.commentID){
             res.status(400).send("Request is missing post commentID");
         }
 
-        const contentType =req.query.postType;
-        const contentID = req.query.contentID;
+        const contentType =req.body.postType;
+        const contentID = req.params.id;
         let commentID =""; 
 
         if(contentType=='post'){
 
             //content ID is the unique identifier for a piece of content, it's the docID for that piece of content. The docID listed in flags, is the docID for the flags, not the content. 
             //what am I saying anyway
-            const { authorId } = await firestoreService.firebaseRead(`posts/${req.query.contentID}`, next); 
+            const { authorId } = await firestoreService.firebaseRead(`posts/${contentID}`, next); 
 
             const newPostFlag = {
                 authorID : authorId,
-                contentID : req.query.contentID,
+                contentID : contentID,
                 contentType : contentType,
             }
             
-            await firestoreService.firebaseCreate(`flags`, newFlag, next);
+            await firestoreService.firebaseCreate(`flags`, newPostFlag, next);
             res.status(200).send("post has been added to list of flagged content.");
 
         }else if (contentType=='postComment'){
 
-            commentID = req.query.commentID;
-            const { comments } = await firestoreService.firebaseRead(`posts/${req.query.contentID}`, next);
+            commentID = req.body.commentID;
+            const { comments } = await firestoreService.firebaseRead(`posts/${contentID}`, next);
 
             if (!comments){
                 res.status(400).send('Post comment not found');
             }else{
             
-                const postCommentAuthorID = comments.find(c => c.commentID == req.query.commentID).authorID;
+                const postCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorID;
 
                 newPostCommentFlag = {
                     authorID : postCommentAuthorID,
@@ -208,11 +212,11 @@ const writeFlag = async (req, res, next) => {
             
         }else if (contentType=='thread'){
 
-            const { authorId } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next); 
+            const { authorId } = await firestoreService.firebaseRead(`threads/${contentID}`, next); 
 
             const newThreadFlag = {
                 authorID : authorId,
-                contentID : req.query.contentID,
+                contentID : contentID,
                 contentType : contentType,
             }
             
@@ -221,14 +225,14 @@ const writeFlag = async (req, res, next) => {
 
         }else if (contentType=='threadComment'){
 
-            commentID = req.query.commentID;
-            const { comments } = await firestoreService.firebaseRead(`threads/${req.query.contentID}`, next);
+            commentID = req.body.commentID;
+            const { comments } = await firestoreService.firebaseRead(`threads/${contentID}`, next);
 
             if (!comments){
                 res.status(400).send('Thread comment not found');
             }else{
             
-                const threadCommentAuthorID = comments.find(c => c.commentID == req.query.commentID).authorID;
+                const threadCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorID;
 
                 newThreadCommentFlag = {
                     authorID : threadCommentAuthorID,
