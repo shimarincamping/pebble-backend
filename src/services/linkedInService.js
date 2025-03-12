@@ -6,7 +6,7 @@ const redirectURI= process.env.linkedInRedirectURI;
 const encodedRedirectURI = encodeURIComponent(redirectURI);
 
 
-const currentUserID='3oMAV7h8tmHVMR8Vpv9B';
+// const currentUserID='3oMAV7h8tmHVMR8Vpv9B';
 
 
 //creates linkedin post if previously authenticated. Starts authentication process first otherwise
@@ -15,7 +15,16 @@ const startSync= async (req, res, next) => {
         // setTimeout(200); 
         //the following data should eventually be available from the request
 
-        const postID='7cLmdmo1IkazHx48qXiu';
+        // const postID='7cLmdmo1IkazHx48qXiu';
+
+        if (!req.params.id){
+            res.status(400).send("missing id parameter");
+        }
+        if (!req.body.currentUserID){
+            res.status(400).send("missing currentUserID in body");
+        }
+        const postID = req.params.id;
+        const currentUserID = req.body.currentUserID;
 
         const { linkedInAccessToken, linkedInID } = await firestoreService.firebaseRead(`users/${currentUserID}`, next);
         const { postDesc, postPicture ,title } = await firestoreService.firebaseRead(`posts/${postID}`, next);

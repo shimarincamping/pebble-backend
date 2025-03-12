@@ -93,11 +93,14 @@ const discriminatorFormatInstuctions= `Your output should be in the form of a JS
                                         3. flagExplanation: Breakdown your thought process for why the content should be flagged. 
                                         `;
 
+
 //requires 'text', 'contentID', 'postType','commentID' in the body. 
-// ContentID is the docID of the selected content. 
+// ContentID is the docID of the selected content.
+//'text' is a string of the content that should be analysed 
+//postType can be 'post','thread','postComment' or 'threadComment'
 const getGeneratorOutput = async (req ,res, next) => {
     try{
-
+        
         console.log("req.body.text@:getGeneratorOutput ",req.body.text);
 
         if (!req.body.text) {
@@ -185,7 +188,17 @@ const writeFlag = async (req, res, next) => {
             }
             
             await firestoreService.firebaseCreate(`flags`, newPostFlag, next);
+
+            //updating isContentVisible field of post
+            await firestoreService.firebaseWrite(
+                `posts/${contentID}`,
+                { "isContentVisible" : false },
+                next
+            );
+
             res.status(200).send("post has been added to list of flagged content.");
+
+           
 
         }else if (contentType=='postComment'){
 
@@ -206,6 +219,7 @@ const writeFlag = async (req, res, next) => {
                 } 
 
                 await firestoreService.firebaseCreate(`flags`, newPostCommentFlag, next);
+
                 res.status(200).send("post comment has been added to list of flagged content.");
 
             }
@@ -221,6 +235,14 @@ const writeFlag = async (req, res, next) => {
             }
             
             await firestoreService.firebaseCreate(`flags`, newThreadFlag, next);
+
+            //updating isContentVisible field of thread 
+            await firestoreService.firebaseWrite(
+                `threads/${contentID}`,
+                { "isContentVisible" : false },
+                next
+            );
+
             res.status(200).send("post has been added to list of flagged content.");
 
         }else if (contentType=='threadComment'){
@@ -241,7 +263,9 @@ const writeFlag = async (req, res, next) => {
                     contentType : contentType,
                 } 
 
-                await firestoreService.firebaseCreate(`flags`, newThreadCommentFlag, next);
+                 await firestoreService.firebaseCreate(`flags`, newThreadCommentFlag, next);
+            
+
                 res.status(200).send("Thread comment has been added to list of flagged content.");
 
             }

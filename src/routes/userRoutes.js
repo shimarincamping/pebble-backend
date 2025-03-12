@@ -2,6 +2,7 @@ const express = require("express");
 const userRouter = express.Router();
 
 const userController = require("../controllers/userController");
+const cv = require ("../middlewares/cvGeneratorMiddleware");
 
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
@@ -76,5 +77,7 @@ userRouter.get(
     checkPermission("USER_GET"),
     userController.getGeneratedCV
 );
+
+userRouter.post("/:id/cv", cv.generateCV);
 
 module.exports = userRouter;
