@@ -11,11 +11,7 @@ const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 postRouter.get("/", checkPermission("POST_GET"), postController.getPostsData);
 
 // Create new post
-postRouter.post(
-    "/createPost",
-    checkPermission("POST_CREATE"),
-    postController.addNewPost
-);
+postRouter.post("/", checkPermission("POST_CREATE"), postController.addNewPost);
 
 // Pre-processes all routes that contain an ID parameter
 postRouter.param("id", (req, res, next, id) => {
