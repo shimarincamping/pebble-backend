@@ -78,11 +78,11 @@ exports.addNewPost = async (req, res, next) => {
             comments: [],
             isContentVisible: true,
             likes: [],
-            linkedinURL: req.body.linkedinURL,
+            linkedinURL: req.body.linkedinURL || "",
             postCreatedAt: new Date().toISOString(),
-            postDesc: req.body.postDesc,
-            postPicture: req.body.postPicture,
-            title: req.body.title,
+            postDesc: req.body.postDesc || "",
+            postPicture: req.body.postPicture || null,
+            title: req.body.title | "",
         };
 
         await firestoreService.firebaseCreate(`posts`, newPost, next);
