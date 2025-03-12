@@ -5,7 +5,7 @@ const { groupObjectsByFieldValues, sortObjectsByNumericFieldValues } = require("
 const { isTodayANewDay } = require("../utils/dateTimeUtils");
 
 
-exports.assertCodingChallengeExists = (req, res, next) => {
+exports.assertGoalExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`goals/${req.goalID}`, res, next);
 };
 
