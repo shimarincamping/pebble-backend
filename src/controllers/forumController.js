@@ -7,6 +7,8 @@ const {
     generateNotification,
 } = require("../middlewares/notificationsMiddleware");
 
+const { throwError } = require("../middlewares/errorMiddleware");
+
 exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
 };
@@ -212,3 +214,152 @@ exports.addNewThread = async (req, res, next) => {
 };
 
 // TODO: Edit/delete comment?
+
+exports.editForumThread = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
+    if (!req.body?.threadDescription || !req.body?.threadTitle) {
+        return throwError(
+            400,
+            `Missing expected value in request body: newThreadDescription or newThreadTitle`,
+            next
+        );
+    }
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return throwError(
+            403,
+            `User attempted to edit post created by another user`,
+            next
+        );
+    }
+
+    await firestoreService.firebaseWrite(
+        `threads/${res.locals.currentData.docId}`,
+        {
+            threadTitle: req.body.threadTitle,
+            threadDescription: req.body.threadDescription,
+        },
+        next
+    );
+};
+
+exports.deleteForumThread = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
+    if (res.locals.currentData.authorId !== currentUserID) {
+        return throwError(
+            403,
+            `User attempted to delete post created by another user`,
+            next
+        );
+    }
+
+    await firestoreService.firebaseWrite(
+        `threads/${res.locals.currentData.docId}`,
+        { isContentVisible: false },
+        next
+    );
+
+    return res.status(204).send();
+};
+
+exports.toggleCommentLike = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
+    const currentCommentID = req.body.commentID;
+
+    let editedCommentData = await res.locals.currentData.comments.map((c) => {
+        if (c.commentID == currentCommentID) {
+            const currentCommentLikes = c.likes;
+            if (c.authorID == currentUserID) {
+                return throwError(
+                    403,
+                    `User cannot like their own comments`,
+                    next
+                );
+            }
+            return {
+                ...c,
+                likes: currentCommentLikes.includes(currentUserID)
+                    ? currentCommentLikes.filter(
+                          (user) => user !== currentUserID
+                      )
+                    : [...currentCommentLikes, currentUserID],
+            };
+        } else {
+            return c;
+        }
+    });
+
+    await firestoreService.firebaseWrite(
+        `threads/${res.locals.currentData.docId}`,
+        { comments: editedCommentData },
+        next
+    );
+
+    res.status(200).send();
+};
+
+exports.editCommentThread = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
+    const currentCommentID = req.body.commentID;
+
+    let editedCommentData = await res.locals.currentData.comments.map((c) => {
+        if (c.commentID == currentCommentID) {
+            if (c.authorID !== currentUserID) {
+                return throwError(
+                    403,
+                    `User attempted to edit comment created by another user`,
+                    next
+                );
+            }
+            return {
+                ...c,
+                commentDetails: req.body.commentDetails,
+            };
+        } else {
+            return c;
+        }
+    });
+
+    await firestoreService.firebaseWrite(
+        `threads/${res.locals.currentData.docId}`,
+        { comments: editedCommentData },
+        next
+    );
+
+    return res.status(200).send();
+};
+
+exports.deleteCommentThread = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
+    const currentCommentID = req.body.commentID;
+
+    let editedCommentData = await res.locals.currentData.comments.map((c) => {
+        if (c.commentID == currentCommentID) {
+            if (c.authorID !== currentUserID) {
+                return throwError(
+                    403,
+                    `User attempted to delete comment created by another user`,
+                    next
+                );
+            }
+            return {
+                ...c,
+                isContentVisible: false,
+            };
+        } else {
+            return c;
+        }
+    });
+
+    await firestoreService.firebaseWrite(
+        `threads/${res.locals.currentData.docId}`,
+        { comments: editedCommentData },
+        next
+    );
+    return res.status(200).send();
+};

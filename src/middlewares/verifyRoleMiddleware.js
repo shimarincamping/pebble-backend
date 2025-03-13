@@ -16,7 +16,7 @@ exports.checkPermission = (permission, next) => {
         if (allowedPermissions && allowedPermissions.includes(permission)) {
             return next();
         } else {
-            throwError(404, `Permission not found.`, next);
+            throwError(403, `Permission not found.`, next);
         }
     };
 };
