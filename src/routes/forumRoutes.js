@@ -39,6 +39,16 @@ forumRouter.put(
     checkPermission("FORUM_THREAD_LIKE"),
     forumController.toggleThreadLike
 );
+forumRouter.put(
+    "/:id",
+    checkPermission("FORUM_THREAD_PUT"),
+    forumController.editForumThread
+);
+forumRouter.delete(
+    "/:id",
+    checkPermission("FORUM_THREAD_DELETE"),
+    forumController.deleteForumThread
+);
 forumRouter.get(
     "/:id/comments",
     checkPermission("FORUM_THREAD_GET"),
@@ -48,6 +58,21 @@ forumRouter.post(
     "/:id/comments",
     checkPermission("FORUM_THREAD_POST"),
     forumController.addNewComment
+);
+forumRouter.put(
+    "/:id/comments",
+    checkPermission("FORUM_THREAD_PUT"),
+    forumController.editCommentThread
+);
+forumRouter.put(
+    "/:id/comments/likes",
+    checkPermission("FORUM_THREAD_PUT"),
+    forumController.toggleCommentLike
+);
+forumRouter.delete(
+    "/:id/comments",
+    checkPermission("FORUM_THREAD_DELETE"),
+    forumController.deleteCommentThread
 );
 
 module.exports = forumRouter;
