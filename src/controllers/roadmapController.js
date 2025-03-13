@@ -17,6 +17,7 @@ exports.formatRoadmapData = (roadmapData) => {
         roadmapBannerImageLink: roadmapData.roadmapBannerImageLink,
         roadmapDescription: roadmapData.roadmapDescription,
         roadmapSection: roadmapData.roadmapSection,
+        authorId: roadmapData.authorId,
     };
 };
 
@@ -68,46 +69,30 @@ exports.addNewThread = async (req, res, next) => {
     // and whether the document exists or not is already checked by documentExistsMiddleware
     // Refactor?
 exports.editRoadmapThread = async (req, res, next) => {
-    const currentUserID = res.locals.currentUserID;
-    const threadID = req.params.threadID;
+    const {
+        roadmapThreadTitle,
+        roadmapThreadAuthor,
+        roadmapProfileImageLink,
+        roadmapBannerImageLink,
+        roadmapDescription,
+        roadmapSection,
+        roadmapSectionButton,
+    } = req.body;
 
-    if (!threadID) {
-        return throwError(400, `Thread ID is required.`, next);
-    }
-
-    const updatedFields = {};
-    const allowedFields = [
-        "roadmapThreadTitle",
-        "roadmapThreadAuthor",
-        "roadmapProfileImageLink",
-        "roadmapBannerImageLink",
-        "roadmapDescription",
-        "roadmapSection",
-    ];
-
-    for (const field of allowedFields) {
-        if (req.body[field] !== undefined) {
-            updatedFields[field] = req.body[field];
-        }
-    }
-
-    if (Object.keys(updatedFields).length === 0) {
-        return throwError(400, `No valid fields provided for update.`, next);
-    }
+    const newRoadmapData = Object.fromEntries(
+        Object.entries({
+            roadmapThreadTitle,
+            roadmapThreadAuthor,
+            roadmapProfileImageLink,
+            roadmapBannerImageLink,
+            roadmapDescription,
+            roadmapSection,
+            roadmapSectionButton,
+        }).filter(([_, v]) => v != null)
+    );
 
     try {
-        const threadRef = `threads/${threadID}`;
-        const threadData = await firestoreService.firebaseRead(threadRef, next);
-
-        if (!threadData) {
-            return throwError(404, `Thread not found.`, next);
-        }
-
-        if (threadData.authorId !== currentUserID) {
-            return throwError(403, `You are not authorized to edit this roadmap thread.`, next);
-        }
-
-        await firestoreService.firebaseUpdate(threadRef, updatedFields, next);
+        await firestoreService.firebaseWrite(`threads/${req.threadID}`, newRoadmapData, next);
         return res.status(200).send("Roadmap thread updated successfully.");
     } catch (error) {
         return next(error);
@@ -115,32 +100,8 @@ exports.editRoadmapThread = async (req, res, next) => {
 };
 
 
-// TODO: res.locals.currentData already stores this information
-    // and whether the document exists or not is already checked by documentExistsMiddleware
-    // Refactor?
 exports.deleteRoadmapThread = async (req, res, next) => {
-    const currentUserID = res.locals.currentUserID;
-    const threadID = req.params.threadID;
-
-    if (!threadID) {
-        return throwError(400, `Thread ID is required.`, next);
-    }
-
-    try {
-        const threadRef = `threads/${threadID}`;
-        const threadData = await firestoreService.firebaseRead(threadRef, next);
-
-        if (!threadData) {
-            return throwError(404, `Thread not found.`, next);
-        }
-
-        if (threadData.authorId !== currentUserID) {
-            return throwError(403, `You are not authorized to delete this roadmap thread.`, next);
-        }
-
-        await firestoreService.firebaseDelete(threadRef, next);
-        return res.status(200).send("Roadmap thread deleted successfully.");
-    } catch (error) {
-        return next(error);
-    }
+    firestoreService.firebaseDelete(`threads/${req.threadID}`, next).then(() => {
+        return res.status(204).send();
+    });
 };
