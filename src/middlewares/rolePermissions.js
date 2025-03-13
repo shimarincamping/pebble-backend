@@ -23,6 +23,7 @@ exports.roles = {
         "USER_POST",
         "USER_PUT",
         "FLAGS_POST",
+        "MODERATOR_DASHBOARD_GET",
     ],
     moderator: ["MODERATOR_DASHBOARD_GET"],
     alumni: [""],

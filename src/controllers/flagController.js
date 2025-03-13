@@ -22,6 +22,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
             return {
                 id: flaggedData.docId,
                 user: authorUserData.fullName,
+                userId: authorUserData.docId,
                 time: getTimeDurationString(
                     new Date(),
                     new Date(contentData.threadDateTime)
@@ -42,6 +43,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
             return {
                 id: flaggedData.docId,
                 user: authorUserData.fullName,
+                userId: authorUserData.docId,
                 time: getTimeDurationString(
                     new Date(),
                     new Date(contentData.postCreatedAt)
@@ -66,6 +68,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                     return {
                         id: flaggedData.docId,
                         user: authorUserData.fullName,
+                        userId: authorUserData.docId,
                         time: getTimeDurationString(
                             new Date(),
                             new Date(c.time)
@@ -93,6 +96,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                     return {
                         id: flaggedData.docId,
                         user: authorUserData.fullName,
+                        userId: authorUserData.docId,
                         time: getTimeDurationString(
                             new Date(),
                             new Date(c.time)
