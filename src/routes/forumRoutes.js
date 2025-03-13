@@ -2,6 +2,7 @@ const express = require("express");
 const forumRouter = express.Router();
 
 const forumController = require("../controllers/forumController");
+const sentimentAnalysisMiddleware = require("../middlewares/sentimentAnalysisMiddleware"); 
 
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
@@ -73,6 +74,13 @@ forumRouter.delete(
     "/:id/comments",
     checkPermission("FORUM_THREAD_DELETE"),
     forumController.deleteCommentThread
+);
+
+forumRouter.post("/:id/flags", checkPermission("FLAGS_POST"),
+    sentimentAnalysisMiddleware.getGeneratorOutput,
+    sentimentAnalysisMiddleware.getDiscriminatorOutput,
+    sentimentAnalysisMiddleware.parseFlag,
+    sentimentAnalysisMiddleware.writeFlag                        
 );
 
 module.exports = forumRouter;
