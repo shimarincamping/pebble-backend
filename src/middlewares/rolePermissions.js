@@ -19,6 +19,7 @@ exports.roles = {
         "USER_GET",
         "USER_POST",
         "USER_PUT",
+        "FLAGS_POST",
     ],
     moderator: ["MODERATOR_DASHBOARD_GET"],
     alumni: [""],

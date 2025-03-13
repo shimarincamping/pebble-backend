@@ -2,7 +2,7 @@ const express = require("express");
 const forumRouter = express.Router();
 
 const forumController = require("../controllers/forumController");
-const sentimentAnalysisMiddleware = require("../middlewares/verifyRoleMiddleware");
+const sentimentAnalysisMiddleware = require("../middlewares/sentimentAnalysisMiddleware"); 
 
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
@@ -51,10 +51,11 @@ forumRouter.post(
     forumController.addNewComment
 );
 
-forumRouter.post("/:id/flags",sentimentAnalysisMiddleware.getGeneratorOutput,
-                              sentimentAnalysisMiddleware.getDiscriminatorOutput,
-                              sentimentAnalysisMiddleware.parseFlag,
-                              sentimentAnalysisMiddleware.writeFlag                        
+forumRouter.post("/:id/flags", checkPermission("FLAGS_POST"),
+    sentimentAnalysisMiddleware.getGeneratorOutput,
+    sentimentAnalysisMiddleware.getDiscriminatorOutput,
+    sentimentAnalysisMiddleware.parseFlag,
+    sentimentAnalysisMiddleware.writeFlag                        
 );
 
 module.exports = forumRouter;
