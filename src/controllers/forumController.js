@@ -13,7 +13,7 @@ exports.assertThreadExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`threads/${req.threadID}`, res, next);
 };
 
-exports.formatForumData = (forumData, forumUserData) => {
+exports.formatForumData = (forumData, forumUserData, currentUserID) => {
     if (!forumData.isContentVisible) {
         return null;
     } // Reject request for thread that is invisible
@@ -33,7 +33,7 @@ exports.formatForumData = (forumData, forumUserData) => {
             fullName: forumUserData.fullName,
             description: forumUserData.courseName, // no description in firestore db, putting courseName for now
         },
-        liked: forumData.likes.includes(forumUserData.docId),
+        liked: forumData.likes.includes(currentUserID),
     };
 };
 
@@ -56,7 +56,11 @@ exports.getForumData = async (req, res, next) => {
         forumData.map(async (p) => {
             return this.formatForumData(
                 p,
-                await firestoreService.firebaseRead(`users/${p.authorId}`, next) // change firebase storage to fit authorID from userData
+                await firestoreService.firebaseRead(
+                    `users/${p.authorId}`,
+                    next
+                ),
+                currentUserID // change firebase storage to fit authorID from userData
             );
         })
     );
@@ -69,6 +73,7 @@ exports.concatForumComments = (o1, o2) => {
 };
 
 exports.getSingleThreadData = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
     const threadComments = await this.getThreadComments(req, res, next);
     return res
         .status(200)
@@ -79,7 +84,8 @@ exports.getSingleThreadData = async (req, res, next) => {
                     await firestoreService.firebaseRead(
                         `users/${res.locals.currentData.authorId}`,
                         next
-                    )
+                    ),
+                    currentUserID
                 ),
                 threadComments
             )
@@ -118,6 +124,7 @@ exports.toggleThreadLike = async (req, res, next) => {
 };
 
 exports.getThreadComments = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
     const currentThreadComments = res.locals.currentData.comments
         .filter((c) => c.isContentVisible)
         .map(async (c) => {
@@ -139,6 +146,7 @@ exports.getThreadComments = async (req, res, next) => {
                     fullName: fullName,
                     description: courseName,
                 },
+                liked: c.likes.includes(currentUserID),
             };
         });
 
