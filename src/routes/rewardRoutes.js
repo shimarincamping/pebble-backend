@@ -13,7 +13,11 @@ rewardRouter.get(
 );
 
 // Tickets must exist before spinning the wheel
-rewardRouter.use("/sendReward", rewardController.assertTicketExists);
+rewardRouter.use(
+    "/sendReward",
+    checkPermission("REWARD_GET"),
+    rewardController.assertTicketExists
+);
 
 // Sending rewards to user email
 rewardRouter.post(

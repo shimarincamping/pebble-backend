@@ -242,6 +242,8 @@ exports.editForumThread = async (req, res, next) => {
         },
         next
     );
+
+    res.status(200).send();
 };
 
 exports.deleteForumThread = async (req, res, next) => {
