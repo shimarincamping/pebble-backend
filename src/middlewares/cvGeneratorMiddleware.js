@@ -177,7 +177,7 @@ const generateCV = async (req, res, next) => {
 
       await firestoreService.firebaseWrite(
                   `users/${currentUserID}`,
-                  { lastestCV: CV },
+                  { latestCV: CV },
                   next
               );
 
