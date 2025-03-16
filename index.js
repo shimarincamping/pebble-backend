@@ -8,9 +8,11 @@ const app = express();
 const dotenv = require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
+const helmet = require("helmet");
 const authRoutes = require("./src/routes/authRoutes");
 const { errorHandler } = require("./src/middlewares/errorMiddleware");
 
+app.use(helmet());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(

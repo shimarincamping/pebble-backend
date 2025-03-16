@@ -1,12 +1,9 @@
 const express = require("express");
 const firestoreService = require("../services/firestoreService");
-const {
-    loginUser,
-    registerUser,
-    logoutUser,
-} = require("../services/firebaseAuthService");
+const { loginUser, registerUser, logoutUser } = require("../services/firebaseAuthService");
 const { verifyJwtToken } = require("../services/jwtService");
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
+const { throwError } = require("../middlewares/errorMiddleware");
 
 const authRouter = express.Router();
 
@@ -18,46 +15,44 @@ authRouter.get("/login", (req, res) => {
 // Register Route
 authRouter.post("/register", async (req, res, next) => {
     const { email, password, fullName } = req.body;
-    try {
-        const result = await registerUser(email, password);
-        if (result) {
-            const newUser = {
-                docId: result.uid,
-                email: req.body.email,
-                fullName: req.body.fullName,
-                userType: "student", // assume student for now
-                about: "",
-                courseName: "PEBBLE user",
-                currentYear: 1,
-                discordUsername: "",
-                followers: [],
-                following: [],
-                latestCV: null,
-                linkedInAccessToken: null,
-                linkedInID: null,
-                notifications: [],
-                phoneNumber: "",
-                pointCount: 0,
-                profileDetails: {
-                    coursesAndCertifications: [],
-                    skills: [],
-                    workExperience: [],
-                },
-                profilePicture: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-                ticketCount: 0,
-            };
+    const result = await registerUser(email, password);
+    if (!result.error) {
+        const newUser = {
+            docId: result.uid,
+            email: req.body.email,
+            fullName: req.body.fullName,
+            userType: "student", // assume student for now
+            about: "",
+            courseName: "PEBBLE user",
+            currentYear: 1,
+            discordUsername: "",
+            followers: [],
+            following: [],
+            latestCV: null,
+            linkedInAccessToken: null,
+            linkedInID: null,
+            notifications: [],
+            phoneNumber: "",
+            pointCount: 0,
+            profileDetails: {
+                coursesAndCertifications: [],
+                skills: [],
+                workExperience: [],
+            },
+            profilePicture: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+            ticketCount: 0,
+        };
 
-            await firestoreService.firebaseCreateUser(
-                newUser,
-                next,
-                result.uid
-            );
-        }
+        await firestoreService.firebaseCreateUser(
+            newUser,
+            next,
+            result.uid
+        );
 
-        res.status(201).json(result);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+        return res.status(201).json(result);
     }
+
+    return throwError(400, `User registration failed`, next);
 });
 
 // Login Route (Returns Firebase & JWT Tokens)
