@@ -5,8 +5,7 @@ const clientSecret= process.env.linkedInClientSecret;
 const redirectURI= process.env.linkedInRedirectURI; 
 const encodedRedirectURI = encodeURIComponent(redirectURI);
 
-
-// const currentUserID='3oMAV7h8tmHVMR8Vpv9B';
+let currentUserID;
 
 
 //creates linkedin post if previously authenticated. Starts authentication process first otherwise
@@ -24,7 +23,9 @@ const startSync= async (req, res, next) => {
             res.status(400).send("missing currentUserID in body");
         }
         const postID = req.params.id;
-        const currentUserID = req.body.currentUserID;
+        if (!currentUserID){
+            currentUserID = req.body.currentUserID;
+        }
 
         const { linkedInAccessToken, linkedInID } = await firestoreService.firebaseRead(`users/${currentUserID}`, next);
         const { postDesc, postPicture ,title } = await firestoreService.firebaseRead(`posts/${postID}`, next);
@@ -36,41 +37,42 @@ const startSync= async (req, res, next) => {
             //send a request to sync with linkedin. This process involves redirecting to the likedin auth page to obtain a code is used for the next function. 
             //w_member_social scope is used to request post access
             authUrl= `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodedRedirectURI}&scope=w_member_social%20openid%20profile`;
-            res.redirect(authUrl);
+            // res.redirect(authUrl);
+            res.json({action:'redirect', authUrl:authUrl}); 
 
-        }
-
-        console.log("post creation path initiated");
-        const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${linkedInAccessToken}`,
-                'X-Restli-Protocol-Version': '2.0.0',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                author: `urn:li:person:${linkedInID}`,
-                lifecycleState: 'PUBLISHED',
-                specificContent: {
-                    "com.linkedin.ugc.ShareContent": {
-                        shareCommentary: {
-                            text: `${title} \n ${postDesc}`
-                        },
-                        shareMediaCategory: "NONE"
-                    }
+        }else {
+            console.log("post creation path initiated");
+            const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${linkedInAccessToken}`,
+                    'X-Restli-Protocol-Version': '2.0.0',
+                    'Content-Type': 'application/json'
                 },
-                visibility: {
-                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-                }
-            })
-        });
-    
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.statusText}`);
+                body: JSON.stringify({
+                    author: `urn:li:person:${linkedInID}`,
+                    lifecycleState: 'PUBLISHED',
+                    specificContent: {
+                        "com.linkedin.ugc.ShareContent": {
+                            shareCommentary: {
+                                text: `${title} \n ${postDesc}`
+                            },
+                            shareMediaCategory: "NONE"
+                        }
+                    },
+                    visibility: {
+                        "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+                    }
+                })
+            });
+        
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.statusText}`);
+            }else{
+                res.json({action:'alert', message:'LinkedIn Sync Success!'}); 
+            }
         }
-
-        res.send('success'); 
-
+               
     }catch(e){
         console.log(e); 
     }
@@ -84,7 +86,7 @@ const handleAccessToken = async (req, res, next) => {
         const code=req.query.code;
 
         //Redirects user's on the linkedin auth page back to pebble. 
-        res.status(200).redirect('http://localhost:3000/feed');
+        res.status(200).redirect('http://localhost:3000/profile');
 
 
         const accessTokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
