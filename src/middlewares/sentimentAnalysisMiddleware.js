@@ -94,13 +94,13 @@ const discriminatorFormatInstuctions= `Your output should be in the form of a JS
                                         `;
 
 
-//requires 'text', 'contentID', 'postType','commentID' in the body. 
+//requires 'text', 'postType','commentID' in the body. 
+//requires contentID as a parameter
 // ContentID is the docID of the selected content.
 //'text' is a string of the content that should be analysed 
 //postType can be 'post','thread','postComment' or 'threadComment'
 const getGeneratorOutput = async (req ,res, next) => {
     try{
-        
         console.log("req.body.text@:getGeneratorOutput ",req.body.text);
 
         if (!req.body.text) {

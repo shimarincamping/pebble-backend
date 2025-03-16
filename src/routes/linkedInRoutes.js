@@ -18,8 +18,8 @@ LinkedInRouter.get(
 LinkedInRouter.get(
     "/callback",
     linkedInService.handleAccessToken,
-    linkedInService.handleLinkedInId,
-    linkedInService.startSync
+    linkedInService.handleLinkedInId
+    // linkedInService.startSync
 );
 // LinkedInRouter.get('/callback',linkedInService.handleAccessToken);
 

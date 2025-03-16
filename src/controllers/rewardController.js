@@ -24,60 +24,67 @@ exports.assertTicketExists = async (req, res, next) => {
 };
 
 exports.addNewReward = async (req, res, next) => {
-    const currentUserID = res.locals.currentUserID;
-    const { ticketCount } = await firestoreService.firebaseRead(`users/${currentUserID}`);
 
-    const newTicketCount = ticketCount - 1;
-    const rewardName = req.body.rewardName;
-    const pointNumber = +getIntegerFromString(rewardName);
+    try{
+        const currentUserID = res.locals.currentUserID;
+        
+        const { ticketCount } = await firestoreService.firebaseRead(`users/${currentUserID}`);
 
-    if (pointNumber) {
-        addPointsTicketsToUser(currentUserID, pointNumber, next);
-    } else {
-        const { email } = await firestoreService.firebaseRead(
+        const newTicketCount = ticketCount - 1;
+        const rewardName = req.body.rewardName;
+        const pointNumber = +getIntegerFromString(rewardName);
+
+        if (pointNumber) {
+            addPointsTicketsToUser(currentUserID, pointNumber, next);
+        } else {
+            const { email } = await firestoreService.firebaseRead(
+                `users/${currentUserID}`,
+                next
+            );
+
+            const reward = await firestoreService.firebaseReadQuery(
+                `rewards`,
+                [where("rewardName", "==", rewardName)],
+                next
+            );
+
+            const transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
+                auth: {
+                    user: process.env.EMAIL_ADDRESS,
+                    pass: process.env.EMAIL_ADDRESS_PASSWORD,
+                },
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_ADDRESS, // campus central's email
+                to: email,
+                subject: "[PEBBLE] Congratulations on winning a special prize!",
+                text: `Congratulations on winning the prize of ${rewardName}! Your code to claim your reward on the respective platform is here: ${reward[0].rewardContent.claimCode}`,
+            };
+
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log("error: ", error);
+                } else {
+                    console.log("email sent: ", info.response);
+                }
+            });
+        }
+
+        firestoreService.firebaseWrite(
             `users/${currentUserID}`,
+            { ticketCount: newTicketCount },
             next
         );
 
-        const reward = await firestoreService.firebaseReadQuery(
-            `rewards`,
-            [where("rewardName", "==", rewardName)],
-            next
-        );
+        // Increment goal related to spinning the wheel
+        updateGoalProgress("SwmK4rU6fRKsH9zKIX1Z", currentUserID, next);
+        res.status(200).send(rewardName);
 
-        const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-                user: process.env.EMAIL_ADDRESS,
-                pass: process.env.EMAIL_ADDRESS_PASSWORD,
-            },
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_ADDRESS, // campus central's email
-            to: email,
-            subject: "[PEBBLE] Congratulations on winning a special prize!",
-            text: `Congratulations on winning the prize of ${rewardName}! Your code to claim your reward on the respective platform is here: ${reward[0].rewardContent.claimCode}`,
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log("error: ", error);
-            } else {
-                console.log("email sent: ", info.response);
-            }
-        });
+    }catch(e){
+        console.error("Error occured while updating reward details: ",e);
     }
-
-    firestoreService.firebaseWrite(
-        `users/${currentUserID}`,
-        { ticketCount: newTicketCount },
-        next
-    );
-
-    // Increment goal related to spinning the wheel
-    updateGoalProgress("SwmK4rU6fRKsH9zKIX1Z", currentUserID, next);
-    res.status(200).send(rewardName);
 };
