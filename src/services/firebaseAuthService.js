@@ -3,7 +3,7 @@ const {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    getAuth,
+    getAuth
 } = require("firebase/auth");
 const { generateJwtToken } = require("../services/jwtService");
 const { throwError } = require("../middlewares/errorMiddleware");
@@ -42,11 +42,11 @@ const loginUser = async (email, password) => {
             uid: userCredential.user.uid,
             email: userCredential.user.email,
             firebaseToken,
-            jwtToken,
+            jwtToken
         };
     } catch (error) {
         console.error("Firebase login error:", error.message);
-        throw new Error("Invalid email or password"); // 🔴 Ensure invalid logins return an error
+        throw new Error("Invalid email or password"); // Ensure invalid logins return an error
     }
 };
 
@@ -91,8 +91,4 @@ const logoutUser = async () => {
 //     });
 // };
 
-module.exports = {
-    registerUser,
-    loginUser,
-    logoutUser,
-};
+module.exports = { registerUser, loginUser, logoutUser };
