@@ -76,7 +76,7 @@ Do not include any keys that are not present in the following:
     "Problem Solving"
   ],
 
-  "otherAchievements": [Certified AWS practicioner, Completed Coursera Course],
+  "certifications":["Certified AWS practicioner, 2020", "Google Cloud AI Expert, 2021"],
 
   "projects": [
     {
@@ -126,7 +126,7 @@ Include the following elements:
 2.Summary: A short summary that paints the student in a positive light. Try to talk about things mentioned in the job desc. 
            If there isn't sufficient information for this section, you may talk about their education.
 2.Skills: (this item should be provided in a list/array format.)
-
+3.certifications: display all the certifications the user has in an array format as specified in the above example. 
 3.Projects: An array of JSONS of the most relvant projects (obtained from posts) based on the job description. 
             Ensure that a detailed description is included. Do your best to use information provided in the array of posts.
             Adhere strictly to the example JSON included.
