@@ -76,7 +76,7 @@ Do not include any keys that are not present in the following:
     "Problem Solving"
   ],
 
-  "certifications":["Certified AWS practicioner, 2020", "Google Cloud AI Expert, 2021"],
+  "certifications":["Certified AWS practicioner (2020)", "Google Cloud AI Expert (Jan 2021)"],
 
   "projects": [
     {
