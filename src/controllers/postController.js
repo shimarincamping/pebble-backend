@@ -17,7 +17,8 @@ exports.assertPostExists = (req, res, next) => {
     documentExistsMiddleware.assertExists(`posts/${req.postID}`, res, next);
 };
 
-exports.formatPostData = (postData, authorUserData) => {
+exports.formatPostData = (postData, authorUserData, currentUserID) => {
+
     if (!postData.isContentVisible) {
         return null;
     } // Reject request for post that is invisible
@@ -48,7 +49,7 @@ exports.formatPostData = (postData, authorUserData) => {
             })
             .toUpperCase(),
         postDesc: postData.postDesc,
-        liked: postData.likes.includes(authorUserData.docId),
+        liked: postData.likes.includes(currentUserID),
     };
 };
 
@@ -75,8 +76,7 @@ exports.getPostsData = async (req, res, next) => {
     const modifiedPostsData = await Promise.all(
         postsData.map(async (p) => {
             return this.formatPostData(
-                p,
-                await firestoreService.firebaseRead(`users/${p.authorId}`, next)
+                p, await firestoreService.firebaseRead(`users/${p.authorId}`, next), currentUserID
             );
         })
     );
@@ -129,13 +129,16 @@ exports.addNewPost = async (req, res, next) => {
 
 
 exports.getSinglePostData = async (req, res, next) => {
+    const currentUserID = res.locals.currentUserID;
+
     return res.status(200).send(
         this.formatPostData(
             res.locals.currentData,
             await firestoreService.firebaseRead(
                 `users/${res.locals.currentData.authorId}`,
                 next
-            )
+            ), 
+            currentUserID
         )
     );
 };
