@@ -21,6 +21,7 @@ exports.formatPostData = (postData, authorUserData) => {
 
     return {
         postID: postData.docId,
+        authorID: postData.authorId,
         fullName: authorUserData.fullName,
         profilePicture: authorUserData.profilePicture,
         courseName:
@@ -92,7 +93,7 @@ exports.addNewPost = async (req, res, next) => {
             postCreatedAt: new Date().toISOString(),
             postDesc: req.body.postDesc || "",
             postPicture: req.body.postPicture || null,
-            title: req.body.title | "",
+            title: req.body.title || "",
         };
 
         await firestoreService.firebaseCreate(`posts`, newPost, next);
