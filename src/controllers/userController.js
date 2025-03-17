@@ -282,5 +282,5 @@ exports.toggleFollower = async (req, res, next) => {
 };
 
 exports.getGeneratedCV = async (req, res, next) => {
-    return res.status(200).send(JSON.parse(res.locals.currentData.latestCV.replace("```", "")));
+    return res.status(200).send(res.locals.currentData.latestCV);
 };

@@ -76,7 +76,7 @@ Do not include any keys that are not present in the following:
     "Problem Solving"
   ],
 
-  "otherAchievements: [Certified AWS practicioner, Completed Coursera Course],
+  "otherAchievements": [Certified AWS practicioner, Completed Coursera Course],
 
   "projects": [
     {
@@ -130,9 +130,10 @@ Include the following elements:
 3.Projects: An array of JSONS of the most relvant projects (obtained from posts) based on the job description. 
             Ensure that a detailed description is included. Do your best to use information provided in the array of posts.
             Adhere strictly to the example JSON included.
-4.Education: The value should be it's own JSON as shown in the example.
+4.Education: The value should be it's own JSON as shown in the example. The educational institution for the current degree is always "Taylor's University, Malaysia"
 
-5.Experience : This s be should be an array of objects that that includes a title and a description. 
+5.Experience : This should be an array of objects that that includes a title and a description. Use all experience available even if it's not very relevant for the job description provided. 
+               However, you should prioritize experience that is most relevant first. 
 `;
 
 //required queries: currentUserID(as a param) & jobDesc in the body
@@ -152,6 +153,7 @@ const generateCV = async (req, res, next) => {
 
         case profileDetails.workExperience:
           workExperience = JSON.stringify(profileDetails(workExperience));
+          console.log(``)
       }
 
       // coursesAndCertifications = JSON.stringify(profileDetails(coursesAndCertifications));
