@@ -1,5 +1,5 @@
 const express = require("express");
-const LinkedInRouter = express.Router();
+const linkedInRouter = express.Router();
 const linkedInService = require("../services/linkedInService");
 
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
@@ -8,14 +8,14 @@ const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
 // LinkedInRouter.get('/',linkedInService.startLinkedInAuth);
 
-LinkedInRouter.get(
+linkedInRouter.get(
     "/",
     checkPermission("LINKEDIN_GET"),
     linkedInService.startSync
 );
 
 //receives the code sent from linkedin and exchanges it for an access token required for
-LinkedInRouter.get(
+linkedInRouter.get(
     "/callback",
     linkedInService.handleAccessToken,
     linkedInService.handleLinkedInId
@@ -23,6 +23,6 @@ LinkedInRouter.get(
 );
 // LinkedInRouter.get('/callback',linkedInService.handleAccessToken);
 
-LinkedInRouter.get("/getID", linkedInService.handleLinkedInId);
+linkedInRouter.get("/getID", linkedInService.handleLinkedInId);
 
-module.exports = LinkedInRouter;
+module.exports = linkedInRouter;
