@@ -76,7 +76,7 @@ Do not include any keys that are not present in the following:
     "Problem Solving"
   ],
 
-  "certifications":["Certified AWS practicioner, 2020", "Google Cloud AI Expert, 2021"],
+  "certifications":["Certified AWS practicioner (2020)", "Google Cloud AI Expert (Jan 2021)"],
 
   "projects": [
     {
@@ -121,6 +121,7 @@ Do not include any keys that are not present in the following:
 const formattingInstructions = `
 The CV should be formatted in a JSON and nothing else.
 This output will be parsed by code so there is no need to include formatting such as headers or bolding.
+Make sure none of the arrays returned in the response are empty, include examples of things to add. Clearly indicate when soemthing is an example. 
 Include the following elements:
 1.Contact Information
 2.Summary: A short summary that paints the student in a positive light. Try to talk about things mentioned in the job desc. 
@@ -142,25 +143,28 @@ const generateCV = async (req, res, next) => {
 
       const currentUserID = req.params.id;
       const { about, courseName, currentYear, email, fullName, phoneNumber, profileDetails } = await firestoreService.firebaseRead(`users/${currentUserID}`, next);
+      let coursesAndCertifications;
+      let skills;
+      let workExperience; 
 
       //stringify profile details
-      switch (profileDetails){
-        case profileDetails.coursesAndCertifications:
+      if (profileDetails.coursesAndCertifications){
           coursesAndCertifications = JSON.stringify(profileDetails.coursesAndCertifications);
+      }
+      if (profileDetails.skills){
+        skills = JSON.stringify(profileDetails.skills);
+      }
 
-        case profileDetails.skills:
-          skills = JSON.stringify(profileDetails.skills);
-
-        case profileDetails.workExperience:
-          workExperience = JSON.stringify(profileDetails(workExperience));
-          console.log(``)
+      if (profileDetails.workExperience) {
+        workExperience = JSON.stringify(profileDetails.workExperience);
+        console.log(`workExperience: ${workExperience}`);
       }
 
       // coursesAndCertifications = JSON.stringify(profileDetails(coursesAndCertifications));
       // skills = JSON.stringify(profileDetails(skills));
       // workExperience = JSON.stringify(profileDetails(workExperience));
 
-      console.log(`\ncurrentUserID@generateCV: ${currentUserID}\n`)
+      // console.log(`\ncurrentUserID@generateCV: ${currentUserID}\n`)
       const posts = JSON.stringify(
         await firestoreService.firebaseReadQuery(
         `posts`,
@@ -168,34 +172,24 @@ const generateCV = async (req, res, next) => {
         next
       )); 
 
-      console.log(`posts@generateCV: ${posts}`);
-    
-      console.log(`profileDetails@generateCv: ${JSON.stringify(profileDetails.workExperience)}`);
-      // console.log(`fullName@generateCv: ${fullName}`);
-      // console.log(`about@generateCv: ${about}`);
-      // console.log(`posts@generateCv: ${posts}`);
 
-
-      //put this back below after profileDetails-> ${coursesAndCertifications},${skils},${workExperience}
+      //put this back below after Courses and certifications-> ${coursesAndCertifications},${skils},${workExperience}
       const prompt= `${role} ${instructions} ${formattingInstructions}
                     job desc: ${req.body.jobDesc}
                     profile information: about->${about}, courseName --> ${courseName}, current year -> ${currentYear}, email-> ${ email}, fullName->${fullName}, 
-                    contact no->${phoneNumber}, profileDetails->
+                    contact no->${phoneNumber}, Courses and certifications --> ${coursesAndCertifications} , skills --> ${skills}, work Experience->${workExperience}
                     post information: ${posts}
                 `;
       const geminiOutput = await geminiService.gemini15Flash.generateContent(prompt);
       
       //remove gemini headers
-      console.log(`Gemini output: ${geminiOutput.response.text()}`);
-      // CV = geminiOutput.response.text().replace(/^```json\s*|```$/g, '');
       const unformatedCV = geminiOutput.response.text();
-      // const formattedCV  = unformatedCV.replace(/^```json/, '').replace(/```$/, '');
       const formattedCV = unformatedCV.substring(7, unformatedCV.length -4);
-      console.log(`formattedCV: ${formattedCV}`)
+      // console.log(`formattedCV: ${formattedCV}`)
       CVObject = JSON.parse(formattedCV);
 
 
-      console.log(`CV.response.text()@generateCV: ${CVObject} `)
+      console.log(`CVObject@generateCV: ${JSON.stringify(CVObject)} `)
 
       await firestoreService.firebaseWrite(
                   `users/${currentUserID}`,
