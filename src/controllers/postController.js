@@ -21,6 +21,7 @@ exports.formatPostData = (postData, authorUserData) => {
 
     return {
         postID: postData.docId,
+        authorID: postData.authorId,
         fullName: authorUserData.fullName,
         profilePicture: authorUserData.profilePicture,
         courseName:
@@ -92,7 +93,7 @@ exports.addNewPost = async (req, res, next) => {
             postCreatedAt: new Date().toISOString(),
             postDesc: req.body.postDesc || "",
             postPicture: req.body.postPicture || null,
-            title: req.body.title | "",
+            title: req.body.title || ""
         };
 
         await firestoreService.firebaseCreate(`posts`, newPost, next);
@@ -111,36 +112,26 @@ exports.addNewPost = async (req, res, next) => {
 };
 
 exports.getSinglePostData = async (req, res, next) => {
-    return res
-        .status(200)
-        .send(
-            this.formatPostData(
-                res.locals.currentData,
-                await firestoreService.firebaseRead(
-                    `users/${res.locals.currentData.authorId}`,
-                    next
-                )
+    return res.status(200).send(
+        this.formatPostData(
+            res.locals.currentData,
+            await firestoreService.firebaseRead(
+                `users/${res.locals.currentData.authorId}`,
+                next
             )
-        );
+        )
+    );
 };
 
 exports.editPost = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
     if (!req.body?.newPostContent) {
-        return throwError(
-            400,
-            `Missing expected value in request body: newPostContent`,
-            next
-        );
+        return throwError(400, `Missing expected value in request body: newPostContent`, next);
     }
 
     if (res.locals.currentData.authorId !== currentUserID) {
-        return throwError(
-            403,
-            `User attempted to edit post created by another user`,
-            next
-        );
+        return throwError(403, `User attempted to edit post created by another user`, next);
     }
 
     await firestoreService.firebaseWrite(
@@ -156,11 +147,7 @@ exports.deletePost = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
     if (res.locals.currentData.authorId !== currentUserID) {
-        return throwError(
-            403,
-            `User attempted to delete post created by another user`,
-            next
-        );
+        return throwError(403, `User attempted to delete post created by another user`, next);
     }
 
     await firestoreService.firebaseWrite(
@@ -189,12 +176,7 @@ exports.togglePostLike = async (req, res, next) => {
         );
 
         // Generate a notification to the relevant user
-        generateNotification(
-            res.locals.currentData.authorId,
-            currentUserID,
-            "liked your post",
-            next
-        );
+        generateNotification(res.locals.currentData.authorId, currentUserID, "liked your post", next);
 
         // Increment goal relating to liking posts  (does not track if posts are unique)
         if (!currentPostLikes.includes(currentUserID)) {
@@ -267,31 +249,20 @@ exports.addNewComment = async (req, res, next) => {
         return res.status(200).send();
     }
 
-    return throwError(
-        400,
-        `Missing expected value in request body: text (comment body may be empty)`,
-        next
-    );
+    return throwError(400, `Missing expected value in request body: text (comment body may be empty)`, next);
 };
 
 exports.editCommentThread = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
-
     const currentCommentID = req.body.commentID;
 
     let editedCommentData = await res.locals.currentData.comments.map((c) => {
-        if (c.commentID == currentCommentID) {
+        if (c.commentID === currentCommentID) {
             if (c.authorId !== currentUserID) {
-                return throwError(
-                    403,
-                    `User attempted to edit comment created by another user`,
-                    next
-                );
+                return throwError(403, `User attempted to edit comment created by another user`, next);
             }
-            return {
-                ...c,
-                text: req.body.text,
-            };
+
+            return { ...c, text: req.body.text};
         } else {
             return c;
         }
@@ -314,12 +285,9 @@ exports.deleteCommentThread = async (req, res, next) => {
     let editedCommentData = await res.locals.currentData.comments.map((c) => {
         if (c.commentID == currentCommentID) {
             if (c.authorId !== currentUserID) {
-                return throwError(
-                    403,
-                    `User attempted to delete comment created by another user`,
-                    next
-                );
+                return throwError(403, `User attempted to delete comment created by another user`, next);
             }
+
             return {
                 ...c,
                 isContentVisible: false,
@@ -334,5 +302,6 @@ exports.deleteCommentThread = async (req, res, next) => {
         { comments: editedCommentData },
         next
     );
+    
     return res.status(200).send();
 };
