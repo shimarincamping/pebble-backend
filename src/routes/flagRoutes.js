@@ -1,8 +1,6 @@
 const express = require("express");
 const flagRouter = express.Router();
-const { verifyJwtToken } = require("../services/jwtService");
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
-
 
 const flagController = require("../controllers/flagController");
 

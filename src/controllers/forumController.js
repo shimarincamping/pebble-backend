@@ -135,7 +135,6 @@ exports.getThreadComments = async (req, res, next) => {
                 );
 
             return {
-                commentID: c.commentID,
                 commentDetails: c.commentDetails,
                 commentID: c.commentID,
                 likes: c.likes.length,
