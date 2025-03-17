@@ -9,8 +9,10 @@ const dotenv = require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
+const multer = require("multer");
 const authRoutes = require("./src/routes/authRoutes");
 const { errorHandler } = require("./src/middlewares/errorMiddleware");
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(helmet());
 app.use(express.json());

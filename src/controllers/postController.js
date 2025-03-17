@@ -1,13 +1,16 @@
 const firestoreService = require("../services/firestoreService");
 const documentExistsMiddleware = require("../middlewares/documentExistsMiddleware");
 
+const { storage } = require("../config/firebaseConfig");
+
 const { where, orderBy, limit } = require("firebase/firestore");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
+const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+const multer = require("multer");
+const { generateNotification } = require("../middlewares/notificationsMiddleware");
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
 const { capitalizeFirstLetter } = require("../utils/stringManipulationUtils");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
+const upload = multer({ storage: multer.memoryStorage() });
 const { throwError } = require("../middlewares/errorMiddleware");
 
 exports.assertPostExists = (req, res, next) => {
@@ -20,6 +23,7 @@ exports.formatPostData = (postData, authorUserData) => {
     } // Reject request for post that is invisible
 
     return {
+        authorID: postData.authorId,
         postID: postData.docId,
         authorID: postData.authorId,
         fullName: authorUserData.fullName,
@@ -83,7 +87,22 @@ exports.getPostsData = async (req, res, next) => {
 exports.addNewPost = async (req, res, next) => {
     const currentUserID = res.locals.currentUserID;
 
-    if (req.body.title && req.body.postDesc) {
+    if (!req.body.title || !req.body.postDesc) {
+        return throwError(400, `Missing expected value in request body: post title and/or description`, next);
+    }
+
+    try {
+        let postPictureUrl = req.body.postPicture || null;
+
+        // Upload image to Firebase Storage if file is provided
+        if (req.file) {
+            const storageRef = ref(storage, `post_images/${Date.now()}_${req.file.originalname}`);
+            await uploadBytes(storageRef, req.file.buffer, { contentType: req.file.mimetype });
+            
+            // Retrieve the correct download URL from Firebase Storage
+            postPictureUrl = await getDownloadURL(storageRef);
+        }
+
         const newPost = {
             authorId: currentUserID,
             comments: [],
@@ -92,24 +111,22 @@ exports.addNewPost = async (req, res, next) => {
             linkedinURL: req.body.linkedinURL || "",
             postCreatedAt: new Date().toISOString(),
             postDesc: req.body.postDesc || "",
-            postPicture: req.body.postPicture || null,
-            title: req.body.title || ""
+            postPicture: postPictureUrl,
+            title: req.body.title || "",
         };
 
+        // Push post data to Firestore
         await firestoreService.firebaseCreate(`posts`, newPost, next);
 
         // Increment goals relating to creating a new post
         updateGoalProgress("YtyiZfQUZF0UrUSTViPE", currentUserID, next);
 
-        return res.status(200).send();
+        return res.status(200).send({ message: "Post created successfully", post: newPost });
+    } catch (error) {
+        return throwError(500, "Error creating post: " + error.message, next);
     }
-
-    return throwError(
-        400,
-        `Missing expected value in request body: post title and/or description`,
-        next
-    );
 };
+
 
 exports.getSinglePostData = async (req, res, next) => {
     return res.status(200).send(
