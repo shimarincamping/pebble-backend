@@ -2,7 +2,9 @@ const express = require("express");
 const userRouter = express.Router();
 
 const userController = require("../controllers/userController");
-const cv = require ("../middlewares/cvGeneratorMiddleware");
+const cv = require("../middlewares/cvGeneratorMiddleware");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 const { checkPermission } = require("../middlewares/verifyRoleMiddleware");
 
@@ -65,6 +67,7 @@ userRouter.get(
 userRouter.put(
     "/:id",
     checkPermission("USER_PUT"),
+    upload.single("file"),
     userController.updateUserInformation
 );
 userRouter.put(
