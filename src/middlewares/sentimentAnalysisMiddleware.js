@@ -140,6 +140,7 @@ const getDiscriminatorOutput = async (req, res, next) => {
 const parseFlag = async (req, res, next) => {
     //who's JASON and why can't my code parse him :sad
     try{
+        console.log(`req.discriminatorOutput@parseFlag: ${req.discriminatorOutput}`);
         const cleanedJsonString = req.discriminatorOutput.replace(/^```json\s*|```$/g, '');
         const flag=JSON.parse(cleanedJsonString).Flag;
         console.log("req.discriminatorOutput@parseFlag: ",flag); 
@@ -157,7 +158,7 @@ const parseFlag = async (req, res, next) => {
 
 const writeFlag = async (req, res, next) => {
     try{
-
+        console.log(`write flag path started`); 
         //handle requests that don't include complete information
         if (!req.body.postType){
             res.status(400).send("Request is missing postType");
@@ -171,12 +172,13 @@ const writeFlag = async (req, res, next) => {
             res.status(400).send("Request is missing post commentID");
         }
 
+        console.log(`completed checks for missing body items @writeFlag`);
         const contentType =req.body.postType;
         const contentID = req.params.id;
         let commentID =""; 
 
         if(contentType=='post'){
-
+            console.log(`conetent identified as post`)
             //content ID is the unique identifier for a piece of content, it's the docID for that piece of content. The docID listed in flags, is the docID for the flags, not the content. 
             //what am I saying anyway
             const { authorId } = await firestoreService.firebaseRead(`posts/${contentID}`, next); 
@@ -202,21 +204,26 @@ const writeFlag = async (req, res, next) => {
 
         }else if (contentType=='postComment'){
 
-            commentID = req.body.commentID;
+            const commentID = req.body.commentID;
             const { comments } = await firestoreService.firebaseRead(`posts/${contentID}`, next);
 
             if (!comments){
                 res.status(400).send('Post comment not found');
             }else{
-            
-                const postCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorID;
+                selectedComment = comments.find(c => c.commentID == req.body.commentID);
+                console.log(`selectedComment.authorId: ${selectedComment.authorId}`);
 
-                newPostCommentFlag = {
+                const postCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorId;
+
+                
+                const newPostCommentFlag = {
                     authorID : postCommentAuthorID,
                     contentID : contentID,
                     commentID : commentID,
                     contentType : contentType,
                 } 
+
+
 
                 await firestoreService.firebaseCreate(`flags`, newPostCommentFlag, next);
 
@@ -247,7 +254,7 @@ const writeFlag = async (req, res, next) => {
 
         }else if (contentType=='threadComment'){
 
-            commentID = req.body.commentID;
+            const commentID = req.body.commentID;
             const { comments } = await firestoreService.firebaseRead(`threads/${contentID}`, next);
 
             if (!comments){
@@ -256,12 +263,14 @@ const writeFlag = async (req, res, next) => {
             
                 const threadCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorID;
 
-                newThreadCommentFlag = {
+                const newThreadCommentFlag = {
                     authorID : threadCommentAuthorID,
                     contentID : contentID,
                     commentID : commentID,
                     contentType : contentType,
                 } 
+
+                console.log(`newThreadCommentFlag: ${newThreadCommentFlag}`)
 
                  await firestoreService.firebaseCreate(`flags`, newThreadCommentFlag, next);
             
@@ -270,6 +279,8 @@ const writeFlag = async (req, res, next) => {
 
             }
 
+        }else{
+            console.error(`invalid or missing postType in body\nreq.body.postType: ${req.body.postType}`);
         }
 
         
