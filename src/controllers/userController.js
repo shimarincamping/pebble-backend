@@ -240,7 +240,8 @@ exports.getUserInformation = (isFullInformation) => {
                               return latestPostData.length
                                   ? formatPostData(
                                         latestPostData[0],
-                                        res.locals.currentData
+                                        res.locals.currentData,
+                                        currentUserID
                                     )
                                   : null;
                           }),
