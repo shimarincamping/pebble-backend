@@ -213,19 +213,25 @@ exports.getPostComments = async (req, res, next) => {
     const currentPostComments = res.locals.currentData.comments
         .filter((c) => c.isContentVisible)
         .map(async (c) => {
-            const { fullName, profilePicture } =
+            const authorInformation =
                 await firestoreService.firebaseRead(
                     `users/${c.authorId}`,
                     next
                 );
-            return {
-                commentID: c.commentID,
-                authorId: c.authorId,
-                author: fullName,
-                profilePic: profilePicture,
-                text: c.text,
-                time: getTimeDurationString(new Date(), new Date(c.time)),
-            };
+
+            try {
+                const { fullName, profilePicture } = authorInformation;
+                return {
+                    commentID: c.commentID,
+                    authorId: c.authorId,
+                    author: fullName,
+                    profilePic: profilePicture,
+                    text: c.text,
+                    time: getTimeDurationString(new Date(), new Date(c.time)),
+                };
+            } catch (err) {
+                throwError(500, err, next);
+            }
         });
 
     const resolvedPostComments = await Promise.all(currentPostComments);
