@@ -46,14 +46,14 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                 userId: authorUserData.docId,
                 time: getTimeDurationString(
                     new Date(),
-                    new Date(contentData.postCreatedAt)
+                    new Date(contentData?.postCreatedAt)
                 ),
                 profilePic: authorUserData.profilePicture,
-                postTitle: contentData.title,
+                postTitle: contentData?.title,
                 authorCourse: authorUserData.courseName || null,
-                postImage: contentData.postPicture || null,
+                postImage: contentData?.postPicture || null,
                 postAuthor: authorUserData.fullName,
-                content: contentData.postDesc,
+                content: contentData?.postDesc,
                 contentType: "post",
             };
 
