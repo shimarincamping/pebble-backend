@@ -140,7 +140,11 @@ exports.getUserNetworkInformation = async (req, res, next) => {
                   [where("docId", "not-in", [...userFollowing, req.userID])],
                   next
               )
-            : Promise.resolve([]); // Prevent Firestore query failure
+            : firestoreService.firebaseReadQuery(
+                `users`,
+                [where("docId", "!=", req.userID)],
+                next
+            )
 
         const [resolvedUserFollowers, resolvedSuggestedUsers] =
             await Promise.all([
