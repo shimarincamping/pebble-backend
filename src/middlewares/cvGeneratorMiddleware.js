@@ -173,7 +173,6 @@ const generateCV = async (req, res, next) => {
       )); 
 
 
-      //put this back below after Courses and certifications-> ${coursesAndCertifications},${skils},${workExperience}
       const prompt= `${role} ${instructions} ${formattingInstructions}
                     job desc: ${req.body.jobDesc}
                     profile information: about->${about}, courseName --> ${courseName}, current year -> ${currentYear}, email-> ${ email}, fullName->${fullName}, 
