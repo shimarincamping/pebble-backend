@@ -77,7 +77,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.threadTitle,
                         postAuthor: authorUserData.fullName,
                         content: c.commentDetails,
-                        contentType: "threadComment",
+                        contentType: "thread Comment",
                         authorCourse: authorUserData.courseName || null,
                     };
                 }
@@ -105,7 +105,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.title,
                         postAuthor: authorUserData.fullName,
                         content: c.text,
-                        contentType: "postComment",
+                        contentType: "post Comment",
                         authorCourse: authorUserData.courseName || null,
                     };
                 }
