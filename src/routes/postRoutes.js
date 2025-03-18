@@ -57,6 +57,18 @@ postRouter.post(
     postController.addNewComment
 );
 
+postRouter.put(
+    "/:id/comments",
+    checkPermission("POST_EDIT"),
+    postController.editCommentThread
+)
+
+postRouter.delete(
+    "/:id/comments",
+    checkPermission("POST_DELETE"),
+    postController.deleteCommentThread
+)
+
 
 // for sentiment analysis, carrys out sa and writes posts that are deemed to be offensive into firebase.
 //requires 'text', 'postType','commentID'(if applicable) in the body.
