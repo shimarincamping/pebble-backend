@@ -46,14 +46,14 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                 userId: authorUserData.docId,
                 time: getTimeDurationString(
                     new Date(),
-                    new Date(contentData.postCreatedAt)
+                    new Date(contentData?.postCreatedAt)
                 ),
                 profilePic: authorUserData.profilePicture,
-                postTitle: contentData.title,
+                postTitle: contentData?.title,
                 authorCourse: authorUserData.courseName || null,
-                postImage: contentData.postPicture || null,
+                postImage: contentData?.postPicture || null,
                 postAuthor: authorUserData.fullName,
-                content: contentData.postDesc,
+                content: contentData?.postDesc,
                 contentType: "post",
             };
 
@@ -77,7 +77,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.threadTitle,
                         postAuthor: authorUserData.fullName,
                         content: c.commentDetails,
-                        contentType: "threadComment",
+                        contentType: "thread Comment",
                         authorCourse: authorUserData.courseName || null,
                     };
                 }
@@ -105,7 +105,7 @@ exports.formatFlaggedData = async (flaggedData, authorUserData, next) => {
                         postTitle: contentData.title,
                         postAuthor: authorUserData.fullName,
                         content: c.text,
-                        contentType: "postComment",
+                        contentType: "post Comment",
                         authorCourse: authorUserData.courseName || null,
                     };
                 }

@@ -1,6 +1,9 @@
 const firestoreService = require("../services/firestoreService");
 const documentExistsMiddleware = require("../middlewares/documentExistsMiddleware");
 
+const { storage } = require("../config/firebaseConfig");
+const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+
 const { where, orderBy, limit } = require("firebase/firestore");
 const {
     generateNotification,
@@ -141,10 +144,10 @@ exports.getUserNetworkInformation = async (req, res, next) => {
                   next
               )
             : firestoreService.firebaseReadQuery(
-                `users`,
-                [where("docId", "!=", req.userID)],
-                next
-            )
+                  `users`,
+                  [where("docId", "!=", req.userID)],
+                  next
+              );
 
         const [resolvedUserFollowers, resolvedSuggestedUsers] =
             await Promise.all([
@@ -272,10 +275,24 @@ exports.updateUserInformation = async (req, res, next) => {
         ); // Only allow user to modify their own profile
     }
 
+    let profilePicture = req.body.profilePicture || null;
+
+    if (req.file) {
+        const storageRef = ref(
+            storage,
+            `post_images/${Date.now()}_${req.file.originalname}`
+        );
+        await uploadBytes(storageRef, req.file.buffer, {
+            contentType: req.file.mimetype,
+        });
+
+        // Retrieve the correct download URL from Firebase Storage
+        profilePicture = await getDownloadURL(storageRef);
+    }
+
     // Extract only fields that users are allowed to modify directly
     const {
         fullName,
-        profilePicture,
         courseName,
         currentYear,
         about,
@@ -286,7 +303,6 @@ exports.updateUserInformation = async (req, res, next) => {
     const newUserInformation = Object.fromEntries(
         Object.entries({
             fullName,
-            profilePicture,
             courseName,
             currentYear,
             about,
@@ -296,15 +312,23 @@ exports.updateUserInformation = async (req, res, next) => {
         }).filter(([k, v]) => v != null)
     ); // Filter out fields that are not in the request body
 
-    await firestoreService.firebaseWrite(
-        `users/${req.userID}`,
-        newUserInformation,
-        next
-    );
+    if (!req.file) {
+        await firestoreService.firebaseWrite(
+            `users/${req.userID}`,
+            newUserInformation,
+            next
+        );
+    } else {
+        const userAppendProfilePicture = {
+            ...newUserInformation,
+            profilePicture,
+        };
 
-    // Increment goal related to adding course and certification
-    if (newUserInformation?.profileDetails?.coursesAndCertifications?.length) {
-        updateGoalProgress("3fqojo85UHUsm1miQuJM", currentUserID, next);
+        await firestoreService.firebaseWrite(
+            `users/${req.userID}`,
+            userAppendProfilePicture,
+            next
+        );
     }
 
     return res.status(200).send();
