@@ -211,7 +211,6 @@ const writeFlag = async (req, res, next) => {
                 res.status(400).send('Post comment not found');
             }else{
                 selectedComment = comments.find(c => c.commentID == req.body.commentID);
-                console.log(`selectedComment: ${JSON.stringify(selectedComment)}`);
                 console.log(`selectedComment.authorId: ${selectedComment.authorId}`);
 
                 const postCommentAuthorID = comments.find(c => c.commentID == req.body.commentID).authorId;
