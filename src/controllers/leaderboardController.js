@@ -1,6 +1,6 @@
 const firestoreService = require('../services/firestoreService');
 
-const { orderBy } = require("firebase/firestore");
+const { where, orderBy } = require("firebase/firestore");
 const { hasCooldownElapsed } = require('../utils/dateTimeUtils');
 const { POINTS_PER_TICKET } = require('../middlewares/goalsRewardsMiddleware');
 
@@ -30,7 +30,7 @@ const mapDataToRequiredFormat = (u) => ({
 const refreshLeaderboard = async (next) => {
     const usersSortedByPoints = await firestoreService.firebaseReadQuery(
         `users`, 
-        [ orderBy("pointCount", "desc") ],
+        [ where("userType", "==", "student"), orderBy("pointCount", "desc") ],
         next
     );
 
