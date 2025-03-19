@@ -17,6 +17,8 @@ exports.roles = {
 
         "LINKEDIN_GET",
 
+        "MODERATOR_DASHBOARD_GET",
+
         "POST_GET",
         "POST_CREATE",
         "POST_EDIT",
