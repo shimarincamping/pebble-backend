@@ -116,12 +116,12 @@ exports.addNewPost = async (req, res, next) => {
         };
 
         // Push post data to Firestore
-        await firestoreService.firebaseCreate(`posts`, newPost, next);
+        const newDocRef = await firestoreService.firebaseCreate(`posts`, newPost, next);
 
         // Increment goals relating to creating a new post
         updateGoalProgress("YtyiZfQUZF0UrUSTViPE", currentUserID, next);
 
-        return res.status(200).send({ message: "Post created successfully", post: newPost });
+        return res.status(200).send({ message: "Post created successfully", post: newPost, postID : newDocRef.id });
     } catch (error) {
         return throwError(500, "Error creating post: " + error.message, next);
     }

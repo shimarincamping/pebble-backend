@@ -2,14 +2,9 @@ const firestoreService = require("../services/firestoreService");
 const documentExistsMiddleware = require("../middlewares/documentExistsMiddleware");
 
 const { where, orderBy, limit } = require("firebase/firestore");
-const {
-    generateNotification,
-} = require("../middlewares/notificationsMiddleware");
+const { generateNotification } = require("../middlewares/notificationsMiddleware");
 const { updateGoalProgress } = require("../middlewares/goalsRewardsMiddleware");
-const {
-    documentObjectArrayReduce,
-    shuffleArray,
-} = require("../utils/dataManipulationUtils");
+const { documentObjectArrayReduce, shuffleArray } = require("../utils/dataManipulationUtils");
 const { getTimeDurationString } = require("../utils/dateTimeUtils");
 
 const { formatPostData } = require("./postController");
@@ -75,34 +70,18 @@ exports.getUserNotifications = (req, res, next) => {
     }
 
     // Fetch user data based on notificationTriggeredBy
-    firestoreService
-        .firebaseReadQuery(
-            `users`,
-            [
-                where(
-                    "docId",
-                    "in",
-                    notifications.map((n) => n.notificationTriggeredBy)
-                ),
-            ],
-            next
-        )
+    firestoreService.firebaseReadQuery(`users`, [ where("docId", "in", Array.from(new Set(notifications.map((n) => n.notificationTriggeredBy)))) ], next)
         .then((usersData) => {
-            if (usersData) {
+            if (usersData) { 
                 const users = documentObjectArrayReduce(usersData);
 
                 return res.status(200).send(
                     notifications.map((n) => ({
                         notificationTriggeredByID: n.notificationTriggeredBy,
-                        notificationTriggeredBy:
-                            users[n.notificationTriggeredBy].fullName,
-                        notificationImage:
-                            users[n.notificationTriggeredBy].profilePicture,
+                        notificationTriggeredBy: users[n.notificationTriggeredBy].fullName,
+                        notificationImage: users[n.notificationTriggeredBy].profilePicture,
                         notificationText: n.notificationText,
-                        notificationDateTime: getTimeDurationString(
-                            new Date(),
-                            new Date(n.notificationDateTime)
-                        ),
+                        notificationDateTime: getTimeDurationString(new Date(), new Date(n.notificationDateTime))
                     }))
                 );
             }
@@ -129,9 +108,7 @@ exports.getUserNetworkInformation = async (req, res, next) => {
         });
 
         const userFollowersInformation = await Promise.all(
-            userFollowers.map((follower) =>
-                firestoreService.firebaseRead(`users/${follower}`, next)
-            )
+            userFollowers.map((follower) => firestoreService.firebaseRead(`users/${follower}`, next))
         );
 
         const suggestedUsersInformation = userFollowing.length
