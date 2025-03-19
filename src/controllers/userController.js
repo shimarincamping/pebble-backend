@@ -150,14 +150,20 @@ exports.getUserNetworkInformation = async (req, res, next) => {
 };
 
 exports.getUserStatsInformation = async (req, res, next) => {
+
+    const response = await firestoreService.firebaseRead(`leaderboard/points`, next);
+    const rankings = response.rankings;
+
+    const leaderboardRank = (() => {
+        const rank = rankings.findIndex((u) => u.userID === req.userID) + 1;
+        return rank === -1 ? rankings.length + 1 : rank;
+    })();
+
+    const leaderboardPercent = Math.ceil(leaderboardRank / rankings.length * 100);
+
     return res.status(200).send({
-        leaderboardRank: await firestoreService
-            .firebaseRead(`leaderboard/points`, next)
-            .then(({ rankings }) => {
-                const rank =
-                    rankings.findIndex((u) => u.userID === req.userID) + 1;
-                return rank === -1 ? rankings.length + 1 : rank;
-            }),
+        leaderboardRank: leaderboardRank,
+        leaderboardPercent : leaderboardPercent,
         totalPoints: res.locals.currentData?.pointCount || 0,
         tickets: res.locals.currentData?.ticketCount || 0,
     });
